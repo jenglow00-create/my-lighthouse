@@ -1,0 +1,11 @@
+이 폴더에 배경 이미지 파일들을 추가하세요.
+
+예시:
+- ocean-waves.jpg (바다 배경)
+- sky-clouds.jpg (하늘 배경)
+- lighthouse-sunset.jpg (등대 일몰 배경)
+
+사용법:
+import oceanBg from '../assets/images/backgrounds/ocean-waves.jpg'
+
+이 파일은 실제 이미지를 추가한 후 삭제해도 됩니다.

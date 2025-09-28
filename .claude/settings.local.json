@@ -6,7 +6,18 @@
       "Bash(mkdir:*)",
       "Bash(npm run dev:*)",
       "Bash(ip addr:*)",
-      "Bash(ping:*)"
+      "Bash(ping:*)",
+      "Bash(curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc)",
+      "Bash(sudo tee:*)",
+      "Bash(sudo apt:*)",
+      "Bash(sudo apt install:*)",
+      "Bash(wget:*)",
+      "Bash(tar:*)",
+      "Bash(./ngrok http 5000)",
+      "Bash(npx localtunnel:*)",
+      "Bash(curl:*)",
+      "Bash(npm run build:*)",
+      "Bash(python3:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,11 +1,12 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, BookOpen, Brain, BarChart3, Settings } from 'lucide-react'
+import { Home, Target, BookOpen, Brain, BarChart3, Settings, User, LogOut } from 'lucide-react'
 
-function Navigation() {
+function Navigation({ currentUser, onLogout, onShowAuth }) {
   const location = useLocation()
 
   const navItems = [
     { path: '/', icon: Home, label: '바다' },
+    { path: '/goals', icon: Target, label: '목표' },
     { path: '/study', icon: BookOpen, label: '공부' },
     { path: '/metacognition', icon: Brain, label: '성찰' },
     { path: '/dashboard', icon: BarChart3, label: '통계' },
@@ -29,6 +30,25 @@ function Navigation() {
             <span>{label}</span>
           </Link>
         ))}
+      </div>
+
+      <div className="nav-user">
+        {currentUser ? (
+          <div className="user-section">
+            <div className="user-info">
+              <User size={16} />
+              <span>{currentUser.username}</span>
+            </div>
+            <button onClick={onLogout} className="logout-btn" title="로그아웃">
+              <LogOut size={16} />
+            </button>
+          </div>
+        ) : (
+          <button onClick={onShowAuth} className="login-btn">
+            <User size={16} />
+            로그인
+          </button>
+        )}
       </div>
     </nav>
   )

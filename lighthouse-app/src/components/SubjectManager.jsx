@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Plus, Target, Calendar, Clock, X, Edit3 } from 'lucide-react'
+import { Plus, Target, Calendar, Clock, X, Edit3, TrendingUp, Award } from 'lucide-react'
 
 function SubjectManager({ studyData, setStudyData }) {
   const [isAddingSubject, setIsAddingSubject] = useState(false)
   const [editingSubject, setEditingSubject] = useState(null)
+  const [showScoreForm, setShowScoreForm] = useState(null) // subjectId
   const [subjectForm, setSubjectForm] = useState({
     name: '',
     examType: 'TOEIC',
@@ -11,6 +12,11 @@ function SubjectManager({ studyData, setStudyData }) {
     examDate: '',
     targetScore: 800,
     description: ''
+  })
+  const [scoreForm, setScoreForm] = useState({
+    expectedScore: '',
+    actualScore: '',
+    testDate: new Date().toISOString().split('T')[0]
   })
 
   const examTypes = [
@@ -45,6 +51,41 @@ function SubjectManager({ studyData, setStudyData }) {
     }))
 
     resetForm()
+  }
+
+  const handleScoreSubmit = (e) => {
+    e.preventDefault()
+    if (!showScoreForm) return
+
+    const newScore = {
+      id: Date.now(),
+      expectedScore: parseInt(scoreForm.expectedScore) || null,
+      actualScore: parseInt(scoreForm.actualScore) || null,
+      testDate: scoreForm.testDate,
+      createdAt: new Date().toISOString()
+    }
+
+    setStudyData(prev => ({
+      ...prev,
+      subjects: {
+        ...prev.subjects,
+        [showScoreForm]: {
+          ...prev.subjects[showScoreForm],
+          scores: [...(prev.subjects[showScoreForm]?.scores || []), newScore]
+        }
+      }
+    }))
+
+    resetScoreForm()
+  }
+
+  const resetScoreForm = () => {
+    setScoreForm({
+      expectedScore: '',
+      actualScore: '',
+      testDate: new Date().toISOString().split('T')[0]
+    })
+    setShowScoreForm(null)
   }
 
   const resetForm = () => {
@@ -113,6 +154,21 @@ function SubjectManager({ studyData, setStudyData }) {
 
   const calculateWeeklyTarget = (subject) => {
     return calculateDailyTarget(subject) * 7
+  }
+
+  const getLatestScore = (subject) => {
+    const scores = subject.scores || []
+    if (scores.length === 0) return null
+    return scores.sort((a, b) => new Date(b.testDate) - new Date(a.testDate))[0]
+  }
+
+  const calculateScoreTrend = (subject) => {
+    const scores = (subject.scores || []).filter(s => s.actualScore).sort((a, b) => new Date(a.testDate) - new Date(b.testDate))
+    if (scores.length < 2) return 0
+
+    const latest = scores[scores.length - 1].actualScore
+    const previous = scores[scores.length - 2].actualScore
+    return latest - previous
   }
 
   const subjects = Object.entries(studyData.subjects || {})
@@ -225,6 +281,73 @@ function SubjectManager({ studyData, setStudyData }) {
         </div>
       )}
 
+      {showScoreForm && (
+        <div className="subject-form-modal">
+          <div className="subject-form-container">
+            <form onSubmit={handleScoreSubmit} className="subject-form">
+              <div className="form-header">
+                <h3>점수 기록 추가</h3>
+                <button type="button" onClick={resetScoreForm} className="close-btn">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="form-group">
+                <label>
+                  <Calendar size={16} />
+                  시험/모의고사 날짜
+                </label>
+                <input
+                  type="date"
+                  value={scoreForm.testDate}
+                  onChange={(e) => setScoreForm(prev => ({ ...prev, testDate: e.target.value }))}
+                  required
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>
+                    <Target size={16} />
+                    예상 점수
+                  </label>
+                  <input
+                    type="number"
+                    value={scoreForm.expectedScore}
+                    onChange={(e) => setScoreForm(prev => ({ ...prev, expectedScore: e.target.value }))}
+                    placeholder="예상 점수"
+                    min="0"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>
+                    <Award size={16} />
+                    실제 점수
+                  </label>
+                  <input
+                    type="number"
+                    value={scoreForm.actualScore}
+                    onChange={(e) => setScoreForm(prev => ({ ...prev, actualScore: e.target.value }))}
+                    placeholder="실제 점수"
+                    min="0"
+                  />
+                </div>
+              </div>
+
+              <div className="form-actions">
+                <button type="button" onClick={resetScoreForm} className="btn-secondary">
+                  취소
+                </button>
+                <button type="submit" className="btn-primary">
+                  점수 추가
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="subjects-grid">
         {subjects.length === 0 ? (
           <div className="empty-state">
@@ -238,6 +361,8 @@ function SubjectManager({ studyData, setStudyData }) {
             const daysLeft = calculateDaysUntilExam(subject.examDate)
             const dailyTarget = calculateDailyTarget(subject)
             const weeklyTarget = calculateWeeklyTarget(subject)
+            const latestScore = getLatestScore(subject)
+            const scoreTrend = calculateScoreTrend(subject)
 
             return (
               <div key={subjectId} className="subject-card">
@@ -304,6 +429,58 @@ function SubjectManager({ studyData, setStudyData }) {
                     {subject.description}
                   </div>
                 )}
+
+                <div className="score-tracking-section">
+                  <div className="score-header">
+                    <h4>
+                      <TrendingUp size={16} />
+                      점수 기록
+                    </h4>
+                    <button
+                      onClick={() => setShowScoreForm(subjectId)}
+                      className="btn-small"
+                    >
+                      <Plus size={14} />
+                      점수 추가
+                    </button>
+                  </div>
+
+                  {latestScore ? (
+                    <div className="latest-score">
+                      <div className="score-info">
+                        {latestScore.actualScore && (
+                          <div className="score-item actual">
+                            <Award size={14} />
+                            <span>최근: {latestScore.actualScore}점</span>
+                            {scoreTrend !== 0 && (
+                              <span className={`trend ${scoreTrend > 0 ? 'positive' : 'negative'}`}>
+                                {scoreTrend > 0 ? '+' : ''}{scoreTrend}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        {latestScore.expectedScore && (
+                          <div className="score-item expected">
+                            <Target size={14} />
+                            <span>예상: {latestScore.expectedScore}점</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="score-date">{latestScore.testDate}</div>
+                    </div>
+                  ) : (
+                    <div className="no-scores">
+                      <p>아직 점수 기록이 없습니다.</p>
+                    </div>
+                  )}
+
+                  {(subject.scores || []).length > 1 && (
+                    <div className="score-summary">
+                      <span>총 {(subject.scores || []).length}회 기록</span>
+                      <span>목표: {subject.targetScore}점</span>
+                    </div>
+                  )}
+                </div>
               </div>
             )
           })
