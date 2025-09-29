@@ -1,12 +1,14 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Brain, ArrowLeft, Calendar, Star, Filter, Search } from 'lucide-react'
+import { Brain, ArrowLeft, Calendar, Star, Filter, Search, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react'
 
 function MetacognitionHistory({ studyData }) {
   const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')
   const [filterRating, setFilterRating] = useState('all')
   const [sortBy, setSortBy] = useState('newest')
+  const [expandedReflections, setExpandedReflections] = useState(new Set())
+  const [showDetailedView, setShowDetailedView] = useState(true)
 
   const reflections = useMemo(() => studyData.reflections || [], [studyData.reflections])
 
@@ -96,6 +98,29 @@ function MetacognitionHistory({ studyData }) {
     return Object.values(monthlyData).sort((a, b) => b.month.localeCompare(a.month))
   }
 
+  const toggleReflectionExpansion = (reflectionId) => {
+    const newExpanded = new Set(expandedReflections)
+    if (newExpanded.has(reflectionId)) {
+      newExpanded.delete(reflectionId)
+    } else {
+      newExpanded.add(reflectionId)
+    }
+    setExpandedReflections(newExpanded)
+  }
+
+  const toggleAllReflections = () => {
+    if (expandedReflections.size === filteredAndSortedReflections.length) {
+      setExpandedReflections(new Set())
+    } else {
+      setExpandedReflections(new Set(filteredAndSortedReflections.map(r => r.id)))
+    }
+  }
+
+  const truncateText = (text, maxLength = 100) => {
+    if (!text || text.length <= maxLength) return text
+    return text.substring(0, maxLength) + '...'
+  }
+
   return (
     <div className="metacognition-history">
       <div className="page-header">
@@ -176,6 +201,37 @@ function MetacognitionHistory({ studyData }) {
               <option value="rating-low">평점 낮은순</option>
             </select>
           </div>
+
+          <div className="view-controls">
+            <button
+              className={`view-toggle-btn ${showDetailedView ? 'active' : ''}`}
+              onClick={() => setShowDetailedView(!showDetailedView)}
+              title={showDetailedView ? '간단히 보기' : '자세히 보기'}
+            >
+              {showDetailedView ? <EyeOff size={16} /> : <Eye size={16} />}
+              {showDetailedView ? '간단히' : '자세히'}
+            </button>
+
+            {filteredAndSortedReflections.length > 0 && (
+              <button
+                className="expand-all-btn"
+                onClick={toggleAllReflections}
+                title={expandedReflections.size === filteredAndSortedReflections.length ? '모두 접기' : '모두 펼치기'}
+              >
+                {expandedReflections.size === filteredAndSortedReflections.length ? (
+                  <>
+                    <ChevronUp size={16} />
+                    모두 접기
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown size={16} />
+                    모두 펼치기
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -198,71 +254,112 @@ function MetacognitionHistory({ studyData }) {
           </div>
         ) : (
           <div className="reflections-list">
-            {filteredAndSortedReflections.map(reflection => (
-              <div key={reflection.id} className="reflection-history-card">
-                <div className="reflection-header">
-                  <div className="header-left">
-                    <div className="reflection-topic">{reflection.topic}</div>
-                    <div className="reflection-date">
-                      <Calendar size={14} />
-                      {formatDate(reflection.date)}
+            {filteredAndSortedReflections.map(reflection => {
+              const isExpanded = expandedReflections.has(reflection.id)
+              const hasAdditionalInfo = reflection.struggled || reflection.needsMoreStudy || reflection.nextPlan
+
+              return (
+                <div key={reflection.id} className={`reflection-history-card ${isExpanded ? 'expanded' : ''}`}>
+                  <div className="reflection-header">
+                    <div className="header-left">
+                      <div className="reflection-topic">{reflection.topic}</div>
+                      <div className="reflection-date">
+                        <Calendar size={14} />
+                        {formatDate(reflection.date)}
+                      </div>
+                    </div>
+                    <div className="header-right">
+                      <div
+                        className="rating-badge"
+                        style={{ backgroundColor: getRatingColor(reflection.selfRating) }}
+                      >
+                        <Star size={14} />
+                        {reflection.selfRating || 0}/5
+                      </div>
+                      {reflection.isAutoTriggered && (
+                        <div className="auto-badge">자동</div>
+                      )}
+                      <button
+                        className="expand-toggle"
+                        onClick={() => toggleReflectionExpansion(reflection.id)}
+                        title={isExpanded ? '접기' : '펼치기'}
+                      >
+                        {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      </button>
                     </div>
                   </div>
-                  <div className="header-right">
-                    <div
-                      className="rating-badge"
-                      style={{ backgroundColor: getRatingColor(reflection.selfRating) }}
-                    >
-                      <Star size={14} />
-                      {reflection.selfRating || 0}/5
+
+                  <div className="reflection-content">
+                    {reflection.prompt && showDetailedView && (
+                      <div className="reflection-prompt">
+                        <strong>💭 질문:</strong> {reflection.prompt}
+                      </div>
+                    )}
+
+                    <div className="reflection-text">
+                      <strong>🧠 성찰 내용:</strong>
+                      <p>
+                        {showDetailedView || isExpanded
+                          ? reflection.reflection
+                          : truncateText(reflection.reflection)
+                        }
+                        {!showDetailedView && !isExpanded && reflection.reflection && reflection.reflection.length > 100 && (
+                          <button
+                            className="show-more-btn"
+                            onClick={() => toggleReflectionExpansion(reflection.id)}
+                          >
+                            더 보기
+                          </button>
+                        )}
+                      </p>
                     </div>
-                    {reflection.isAutoTriggered && (
-                      <div className="auto-badge">자동</div>
+
+                    {showDetailedView && (
+                      <div className="satisfaction-level">
+                        <strong>⭐ 만족도:</strong>
+                        <span style={{ color: getRatingColor(reflection.selfRating) }}>
+                          {getRatingLabel(reflection.selfRating)}
+                        </span>
+                      </div>
+                    )}
+
+                    {hasAdditionalInfo && (showDetailedView || isExpanded) && (
+                      <div className="additional-info">
+                        {reflection.struggled && (
+                          <div className="info-item struggled">
+                            <strong>😓 어려웠던 점:</strong>
+                            <p>{reflection.struggled}</p>
+                          </div>
+                        )}
+                        {reflection.needsMoreStudy && (
+                          <div className="info-item study-more">
+                            <strong>📚 더 공부할 것:</strong>
+                            <p>{reflection.needsMoreStudy}</p>
+                          </div>
+                        )}
+                        {reflection.nextPlan && (
+                          <div className="info-item next-plan">
+                            <strong>🎯 다음 계획:</strong>
+                            <p>{reflection.nextPlan}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {!showDetailedView && hasAdditionalInfo && !isExpanded && (
+                      <div className="additional-info-preview">
+                        <button
+                          className="show-additional-btn"
+                          onClick={() => toggleReflectionExpansion(reflection.id)}
+                        >
+                          📋 추가 정보 보기 ({[reflection.struggled, reflection.needsMoreStudy, reflection.nextPlan].filter(Boolean).length}개)
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
-
-                <div className="reflection-content">
-                  {reflection.prompt && (
-                    <div className="reflection-prompt">
-                      <strong>질문:</strong> {reflection.prompt}
-                    </div>
-                  )}
-
-                  <div className="reflection-text">
-                    <strong>성찰 내용:</strong>
-                    <p>{reflection.reflection}</p>
-                  </div>
-
-                  <div className="satisfaction-level">
-                    <strong>만족도:</strong>
-                    <span style={{ color: getRatingColor(reflection.selfRating) }}>
-                      {getRatingLabel(reflection.selfRating)}
-                    </span>
-                  </div>
-
-                  {(reflection.struggled || reflection.needsMoreStudy || reflection.nextPlan) && (
-                    <div className="additional-info">
-                      {reflection.struggled && (
-                        <div className="info-item">
-                          <strong>어려웠던 점:</strong> {reflection.struggled}
-                        </div>
-                      )}
-                      {reflection.needsMoreStudy && (
-                        <div className="info-item">
-                          <strong>더 공부할 것:</strong> {reflection.needsMoreStudy}
-                        </div>
-                      )}
-                      {reflection.nextPlan && (
-                        <div className="info-item">
-                          <strong>다음 계획:</strong> {reflection.nextPlan}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>

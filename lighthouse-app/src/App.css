@@ -1,3 +1,6 @@
+/* Import OceanView styles */
+@import './styles/OceanView.css';
+
 /* Reset and base styles */
 * {
   box-sizing: border-box;
@@ -44,8 +47,10 @@ body {
   gap: 0.5rem;
 }
 
-.lighthouse-icon {
-  font-size: 2rem;
+.nav-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
 }
 
 .nav-brand h1 {
@@ -2653,6 +2658,95 @@ body {
   font-size: 0.75rem;
 }
 
+.expand-toggle {
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.expand-toggle:hover {
+  background: #f3f4f6;
+  color: #4338ca;
+}
+
+.view-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.view-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.view-toggle-btn:hover {
+  background: #e5e7eb;
+}
+
+.view-toggle-btn.active {
+  background: #4338ca;
+  color: white;
+  border-color: #4338ca;
+}
+
+.expand-all-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #374151;
+  transition: all 0.2s ease;
+}
+
+.expand-all-btn:hover {
+  background: #f9fafb;
+  border-color: #4338ca;
+  color: #4338ca;
+}
+
+.show-more-btn, .show-additional-btn {
+  background: none;
+  border: none;
+  color: #4338ca;
+  cursor: pointer;
+  font-size: 0.875rem;
+  text-decoration: underline;
+  margin-left: 0.5rem;
+  padding: 0.25rem 0;
+}
+
+.show-more-btn:hover, .show-additional-btn:hover {
+  color: #3730a3;
+}
+
+.additional-info-preview {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.reflection-history-card.expanded {
+  box-shadow: 0 4px 12px rgba(67, 56, 202, 0.1);
+}
+
 .reflection-content {
   space-y: 1rem;
 }
@@ -3315,5 +3409,192 @@ body {
   .real-time-feedback {
     font-size: 0.75rem;
     padding: 0.4rem 0.6rem;
+  }
+}
+
+/* Boat Selection Styles */
+.boat-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.boat-option {
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 15px;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.boat-option:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.boat-option.selected {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.2);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.boat-preview {
+  width: 100%;
+  height: 120px;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.boat-preview-image {
+  width: auto;
+  height: 100%;
+  object-fit: contain;
+  max-width: 100%;
+}
+
+.boat-info h4 {
+  margin: 0 0 0.5rem 0;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.boat-info p {
+  margin: 0 0 1rem 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.selected-indicator {
+  color: #667eea;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.25rem 0.75rem;
+  background: rgba(102, 126, 234, 0.2);
+  border-radius: 15px;
+  border: 1px solid rgba(102, 126, 234, 0.3);
+}
+
+.boat-selection-hint {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.boat-selection-hint p {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* Animation Controls */
+.animation-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.toggle-setting {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.toggle-setting label {
+  color: white;
+  font-weight: 500;
+  margin: 0;
+}
+
+.toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 25px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.toggle-btn.active {
+  background: rgba(102, 126, 234, 0.3);
+  border-color: #667eea;
+  color: #667eea;
+}
+
+/* Mobile Responsive for Boat Selection */
+@media (max-width: 768px) {
+  .boat-selection-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .boat-option {
+    padding: 0.75rem;
+    flex-direction: row;
+    text-align: left;
+  }
+
+  .boat-preview {
+    width: 80px;
+    height: 60px;
+    margin-right: 1rem;
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+
+  .boat-info {
+    flex: 1;
+  }
+
+  .boat-info h4 {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .boat-info p {
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .animation-controls {
+    gap: 0.75rem;
+  }
+
+  .toggle-setting {
+    padding: 0.75rem;
+  }
+
+  .toggle-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
   }
 }

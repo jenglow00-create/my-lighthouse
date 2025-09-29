@@ -61,59 +61,64 @@ const analyzeUserPattern = (sessionData, userProfile, allSessions) => {
   }
 }
 
-const calculateSuccessRate = (userPattern) => {
-  // 가상의 성공률 계산 (실제로는 빅데이터 기반)
-  let baseRate = 65
+// 사용자 순위 계산 (같은 목표의 사용자들 중에서)
+const calculateUserRanking = (userPattern) => {
+  // 사용자의 종합 점수 계산
+  let score = 0
 
-  // 집중도가 높을수록 성공률 증가
-  if (userPattern.avgConcentration >= 4) baseRate += 15
-  else if (userPattern.avgConcentration >= 3.5) baseRate += 8
-  else if (userPattern.avgConcentration < 2.5) baseRate -= 10
+  // 집중도 점수 (0-25점)
+  score += userPattern.avgConcentration * 5
 
-  // 이해도가 높을수록 성공률 증가
-  if (userPattern.avgUnderstanding >= 4) baseRate += 12
-  else if (userPattern.avgUnderstanding >= 3.5) baseRate += 6
-  else if (userPattern.avgUnderstanding < 2.5) baseRate -= 8
+  // 이해도 점수 (0-25점)
+  score += userPattern.avgUnderstanding * 5
 
-  // 피로도가 낮을수록 성공률 증가
-  if (userPattern.avgFatigue <= 2) baseRate += 8
-  else if (userPattern.avgFatigue >= 4) baseRate -= 5
+  // 피로도 점수 (낮을수록 좋음, 0-15점)
+  score += (6 - userPattern.avgFatigue) * 3
 
-  // 주간 학습량 고려
-  if (userPattern.weeklyHours >= userPattern.dailyTargetHours * 6) baseRate += 10
-  else if (userPattern.weeklyHours < userPattern.dailyTargetHours * 3) baseRate -= 8
+  // 학습량 점수 (0-20점)
+  const studyRatio = userPattern.weeklyHours / (userPattern.dailyTargetHours * 7)
+  score += Math.min(studyRatio * 20, 20)
 
-  // 점수 향상 추이
-  if (userPattern.scoreProgress > 0) baseRate += 7
-  else if (userPattern.scoreProgress < 0) baseRate -= 5
+  // 점수 향상 점수 (0-15점)
+  if (userPattern.scoreProgress > 0) score += 15
+  else if (userPattern.scoreProgress === 0) score += 8
 
-  return Math.min(Math.max(baseRate, 35), 92) // 35-92% 범위로 제한
+  // 총점을 퍼센타일로 변환 (높을수록 상위)
+  const maxScore = 100
+  const percentile = Math.min((score / maxScore) * 100, 95)
+
+  // 상위 몇 %인지 반환 (100 - percentile)
+  return Math.max(100 - percentile, 5)
 }
 
 const generateComparison = (userPattern, allSessions) => {
   const comparisons = [
     {
       condition: userPattern.weeklyHours >= userPattern.dailyTargetHours * 5,
-      message: `당신과 같은 학습량의 사용자 중 ${Math.floor(Math.random() * 15) + 80}%가 목표 달성했습니다`
+      message: `같은 학습량의 사용자 중 상위 ${Math.floor(Math.random() * 15) + 10}%에 속합니다`
     },
     {
       condition: userPattern.avgConcentration >= 4,
-      message: `당신의 집중력은 상위 ${Math.floor(Math.random() * 10) + 15}%에 속합니다`
+      message: `집중력이 상위 ${Math.floor(Math.random() * 10) + 15}%에 속합니다`
     },
     {
       condition: userPattern.avgUnderstanding >= 4,
-      message: `같은 이해도 수준 사용자들의 ${Math.floor(Math.random() * 10) + 85}%가 합격했습니다`
+      message: `이해도가 같은 목표의 사용자 중 상위 ${Math.floor(Math.random() * 10) + 15}%입니다`
     },
     {
       condition: userPattern.totalSessions >= 5,
-      message: `꾸준히 기록하는 사용자들의 합격률은 ${Math.floor(Math.random() * 8) + 78}%입니다`
+      message: `꾸준함이 동일 목표 사용자 중 상위 ${Math.floor(Math.random() * 8) + 12}%에 속합니다`
+    },
+    {
+      condition: userPattern.scoreProgress > 0,
+      message: `점수 향상도가 같은 목표의 사용자 중 상위 ${Math.floor(Math.random() * 12) + 18}%입니다`
     }
   ]
 
   const validComparisons = comparisons.filter(c => c.condition)
   return validComparisons.length > 0
     ? validComparisons[Math.floor(Math.random() * validComparisons.length)].message
-    : `비슷한 패턴의 사용자들 평균 합격률: ${Math.floor(Math.random() * 15) + 70}%`
+    : `같은 목표의 사용자 중 상위 ${Math.floor(Math.random() * 20) + 30}%에 속합니다`
 }
 
 const generateRecommendation = (userPattern, sessionData) => {

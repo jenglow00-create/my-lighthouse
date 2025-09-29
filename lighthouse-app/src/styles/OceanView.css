@@ -1,0 +1,487 @@
+/* 바다 애니메이션 화면 스타일 */
+
+.ocean-view-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(180deg, #87CEEB 0%, #4682B4 50%, #1e3c72 100%);
+}
+
+/* 헤더 */
+.ocean-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.ocean-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ocean-title h1 {
+  margin: 0;
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.header-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.menu-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.menu-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+/* 메인 바다 화면 */
+.ocean-main {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* 배경 이미지 */
+.ocean-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.ocean-bg-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* 작은 구름 레이어 (크기 축소 및 최상단 배치) */
+.clouds-layer-small {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 20%;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.clouds-image-small {
+  position: absolute;
+  width: 12%; /* 기존 120%에서 10분의 1로 축소 */
+  height: auto;
+  opacity: 0.6;
+  object-fit: contain;
+}
+
+.clouds-1-small {
+  top: 5%;
+  left: 20%;
+  animation: float-cloud-1-small 25s infinite linear;
+}
+
+.clouds-2-small {
+  top: 10%;
+  right: 30%;
+  opacity: 0.4;
+  animation: float-cloud-2-small 30s infinite linear;
+}
+
+@keyframes float-cloud-1-small {
+  0% { transform: translateX(-20px); }
+  100% { transform: translateX(20px); }
+}
+
+@keyframes float-cloud-2-small {
+  0% { transform: translateX(-15px); }
+  100% { transform: translateX(15px); }
+}
+
+/* 등대 */
+.lighthouse-container {
+  position: absolute;
+  right: 5%;
+  bottom: 15%;
+  z-index: 5;
+  transform-origin: center bottom;
+}
+
+.lighthouse-image {
+  width: auto;
+  height: 200px;
+  object-fit: contain;
+  filter: drop-shadow(2px 2px 8px rgba(0, 0, 0, 0.3));
+}
+
+.lighthouse-flipped {
+  transform: scaleX(-1);
+}
+
+.lighthouse-glow .lighthouse-image {
+  filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.8))
+          drop-shadow(2px 2px 8px rgba(0, 0, 0, 0.3));
+}
+
+.lighthouse-beam-effect {
+  position: absolute;
+  top: 20%;
+  left: -100%;
+  width: 200%;
+  height: 80%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 0, 0.2),
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transform-origin: right center;
+  animation: lighthouse-beam 3s infinite;
+  pointer-events: none;
+}
+
+@keyframes lighthouse-beam {
+  0%, 100% { transform: rotate(-10deg); opacity: 0; }
+  50% { transform: rotate(10deg); opacity: 1; }
+}
+
+/* 배 */
+.boat-container {
+  position: absolute;
+  bottom: 25%;
+  z-index: 4;
+  transition: left 2s ease-out;
+  transform-origin: center bottom;
+}
+
+.boat-image {
+  width: auto;
+  height: 80px;
+  object-fit: contain;
+  filter: drop-shadow(2px 2px 6px rgba(0, 0, 0, 0.2));
+}
+
+.boat-flipped {
+  transform: scaleX(-1);
+}
+
+/* 상단 진행률 오버레이 */
+.progress-overlay-top {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  padding: 0 1rem;
+}
+
+.progress-card-compact {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 1rem 1.5rem;
+  color: white;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  min-width: 250px;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.progress-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.percentage-value-compact {
+  font-size: 1.8rem;
+  font-weight: 700;
+  background: linear-gradient(45deg, #ffd700, #ffed4e);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+}
+
+.progress-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.no-subjects-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.btn-tiny {
+  padding: 0.3rem 0.8rem;
+  font-size: 0.7rem;
+  border: none;
+  border-radius: 10px;
+  background: rgba(102, 126, 234, 0.8);
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-tiny:hover {
+  background: rgba(102, 126, 234, 1);
+  transform: scale(1.05);
+}
+
+.btn-small {
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  border-radius: 20px;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+.btn-outline:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.no-subjects-message {
+  text-align: center;
+}
+
+.no-subjects-message p {
+  margin-bottom: 1rem;
+  opacity: 0.9;
+}
+
+/* 환영 힌트 */
+.welcome-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 8;
+  animation: fade-in-up 1s ease-out;
+}
+
+.hint-bubble {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  max-width: 300px;
+}
+
+.hint-bubble p {
+  margin: 0.5rem 0;
+  color: #333;
+}
+
+.hint-bubble small {
+  color: #666;
+  font-size: 0.8rem;
+}
+
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -40%);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* 반응형 디자인 */
+
+/* 태블릿 */
+@media (max-width: 1024px) {
+  .ocean-header {
+    padding: 1rem;
+  }
+
+  .ocean-title h1 {
+    font-size: 1.3rem;
+  }
+
+  .lighthouse-image {
+    height: 150px;
+  }
+
+  .boat-image {
+    height: 60px;
+  }
+
+  .progress-card {
+    padding: 1rem 1.5rem;
+    margin: 0 1rem;
+  }
+
+  .percentage-value {
+    font-size: 2.5rem;
+  }
+}
+
+/* 모바일 */
+@media (max-width: 768px) {
+  .ocean-header {
+    padding: 0.75rem;
+  }
+
+  .ocean-title h1 {
+    font-size: 1.1rem;
+  }
+
+  .menu-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .lighthouse-container {
+    right: 2%;
+    bottom: 20%;
+  }
+
+  .lighthouse-image {
+    height: 120px;
+  }
+
+  .boat-image {
+    height: 50px;
+  }
+
+  .progress-overlay-top {
+    top: 70px;
+    padding: 0 0.5rem;
+  }
+
+  .progress-card-compact {
+    padding: 0.75rem 1rem;
+    min-width: 200px;
+  }
+
+  .progress-header h3 {
+    font-size: 0.9rem;
+  }
+
+  .percentage-value-compact {
+    font-size: 1.5rem;
+  }
+
+  .clouds-image-small {
+    width: 15%;
+  }
+
+  .welcome-hint {
+    top: 40%;
+    left: 1rem;
+    right: 1rem;
+    transform: translateY(-50%);
+  }
+
+  .hint-bubble {
+    padding: 1rem;
+    max-width: none;
+    width: 100%;
+  }
+}
+
+/* 작은 모바일 */
+@media (max-width: 480px) {
+  .lighthouse-image {
+    height: 100px;
+  }
+
+  .boat-image {
+    height: 40px;
+  }
+
+  .percentage-value-compact {
+    font-size: 1.3rem;
+  }
+
+  .progress-card-compact {
+    padding: 0.5rem 0.75rem;
+    min-width: 180px;
+  }
+
+  .progress-summary {
+    font-size: 0.7rem;
+  }
+
+  .clouds-image-small {
+    width: 18%;
+  }
+}
+
+/* 성능 최적화를 위한 애니메이션 제어 */
+@media (prefers-reduced-motion: reduce) {
+  .clouds-1,
+  .clouds-2,
+  .lighthouse-beam-effect {
+    animation: none;
+  }
+
+  .boat-container {
+    transition: none;
+  }
+
+  .welcome-hint {
+    animation: none;
+  }
+}

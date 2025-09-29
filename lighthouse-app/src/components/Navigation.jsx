@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { Home, Target, BookOpen, Brain, BarChart3, Settings, User, LogOut } from 'lucide-react'
+import logo from '../assets/images/logos/등대 로고.png'
 
 function Navigation({ currentUser, onLogout, onShowAuth }) {
   const location = useLocation()
@@ -16,7 +17,7 @@ function Navigation({ currentUser, onLogout, onShowAuth }) {
   return (
     <nav className="navigation">
       <div className="nav-brand">
-        <span className="lighthouse-icon">🏮</span>
+        <img src={logo} alt="등대 로고" className="nav-logo" />
         <h1>등대</h1>
       </div>
       <div className="nav-links">

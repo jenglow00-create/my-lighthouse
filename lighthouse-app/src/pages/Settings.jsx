@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Settings as SettingsIcon, Target, BookOpen, Trash2, Download, Upload, Users, Brain, ToggleLeft, ToggleRight, User, Clock, Database } from 'lucide-react'
+import { Settings as SettingsIcon, Target, BookOpen, Trash2, Download, Upload, Users, Brain, ToggleLeft, ToggleRight, User, Clock, Database, Palette } from 'lucide-react'
 import SubjectManager from '../components/SubjectManager'
 import { successRateDataCollector } from '../utils/successRateDataCollector'
+import { boatOptions } from '../constants/boatOptions'
 
 function Settings({ studyData, setStudyData }) {
   const [activeTab, setActiveTab] = useState('subjects')
@@ -122,6 +123,13 @@ function Settings({ studyData, setStudyData }) {
         >
           <User size={16} />
           개인 정보
+        </button>
+        <button
+          className={`tab ${activeTab === 'appearance' ? 'active' : ''}`}
+          onClick={() => setActiveTab('appearance')}
+        >
+          <Palette size={16} />
+          외형 설정
         </button>
         <button
           className={`tab ${activeTab === 'data' ? 'active' : ''}`}
@@ -413,6 +421,109 @@ function Settings({ studyData, setStudyData }) {
                       return mostType ? typeNames[mostType[0]] || mostType[0] : '데이터 없음'
                     })()}
                   </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'appearance' && (
+          <div className="appearance-settings">
+            <div className="setting-section">
+              <h3>바다 화면 보트 선택</h3>
+              <p>메인 화면에서 사용할 보트를 선택하세요</p>
+
+              <div className="boat-selection-grid">
+                {boatOptions.map(boat => (
+                  <div
+                    key={boat.id}
+                    className={`boat-option ${
+                      (studyData.globalSettings?.selectedBoat || 'boat1') === boat.id ? 'selected' : ''
+                    }`}
+                    onClick={() => setStudyData(prev => ({
+                      ...prev,
+                      globalSettings: {
+                        ...prev.globalSettings,
+                        selectedBoat: boat.id
+                      }
+                    }))}
+                  >
+                    <div className="boat-preview">
+                      <img src={boat.image} alt={boat.name} className="boat-preview-image" />
+                    </div>
+                    <div className="boat-info">
+                      <h4>{boat.name}</h4>
+                      <p>{boat.description}</p>
+                      {(studyData.globalSettings?.selectedBoat || 'boat1') === boat.id && (
+                        <div className="selected-indicator">
+                          ✓ 선택됨
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="boat-selection-hint">
+                <p>💡 선택한 보트는 바로 메인 화면에 반영됩니다!</p>
+              </div>
+            </div>
+
+            <div className="setting-section">
+              <h3>애니메이션 설정</h3>
+              <p>화면 애니메이션 효과를 조정합니다</p>
+
+              <div className="animation-controls">
+                <div className="toggle-setting">
+                  <label>파도 애니메이션</label>
+                  <button
+                    className={`toggle-btn ${studyData.globalSettings?.waveAnimation !== false ? 'active' : ''}`}
+                    onClick={() => setStudyData(prev => ({
+                      ...prev,
+                      globalSettings: {
+                        ...prev.globalSettings,
+                        waveAnimation: prev.globalSettings?.waveAnimation !== false ? false : true
+                      }
+                    }))}
+                  >
+                    {studyData.globalSettings?.waveAnimation !== false ? (
+                      <>
+                        <ToggleRight size={20} />
+                        <span>활성화</span>
+                      </>
+                    ) : (
+                      <>
+                        <ToggleLeft size={20} />
+                        <span>비활성화</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="toggle-setting">
+                  <label>구름 움직임</label>
+                  <button
+                    className={`toggle-btn ${studyData.globalSettings?.cloudAnimation !== false ? 'active' : ''}`}
+                    onClick={() => setStudyData(prev => ({
+                      ...prev,
+                      globalSettings: {
+                        ...prev.globalSettings,
+                        cloudAnimation: prev.globalSettings?.cloudAnimation !== false ? false : true
+                      }
+                    }))}
+                  >
+                    {studyData.globalSettings?.cloudAnimation !== false ? (
+                      <>
+                        <ToggleRight size={20} />
+                        <span>활성화</span>
+                      </>
+                    ) : (
+                      <>
+                        <ToggleLeft size={20} />
+                        <span>비활성화</span>
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             </div>

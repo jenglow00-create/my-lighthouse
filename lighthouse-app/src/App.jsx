@@ -10,6 +10,7 @@ import MetacognitionHistory from './pages/MetacognitionHistory'
 import Dashboard from './pages/Dashboard'
 import Settings from './pages/Settings'
 import { collectDataPeriodically } from './utils/successRateDataCollector'
+import logo from './assets/images/logos/등대 로고.png'
 import './App.css'
 
 function App() {
@@ -26,6 +27,21 @@ function App() {
   const [showAuthModal, setShowAuthModal] = useState(false)
 
   useEffect(() => {
+    // Always ensure master user exists for testing (force create)
+    const users = JSON.parse(localStorage.getItem('lighthouse-users') || '[]')
+    const masterUser = {
+      id: 1,
+      username: '1',
+      email: 'master@lighthouse.com',
+      password: '1',
+      createdAt: new Date().toISOString()
+    }
+
+    // Remove existing master if any and add fresh one
+    const filteredUsers = users.filter(user => user.username !== '1')
+    const updatedUsers = [masterUser, ...filteredUsers]
+    localStorage.setItem('lighthouse-users', JSON.stringify(updatedUsers))
+
     // Load current user
     const savedUser = localStorage.getItem('lighthouse-current-user')
     if (savedUser) {
@@ -117,7 +133,7 @@ function App() {
         color: 'white'
       }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏮</div>
+          <img src={logo} alt="등대 로고" style={{ width: '80px', height: '80px', marginBottom: '1rem', objectFit: 'contain' }} />
           <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>등대 앱 로딩 중...</div>
           <div style={{ marginTop: '1rem', opacity: 0.8 }}>잠시만 기다려주세요</div>
         </div>
@@ -148,7 +164,7 @@ function App() {
           ) : (
             <div className="auth-required">
               <div className="auth-placeholder">
-                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏮</div>
+                <img src={logo} alt="등대 로고" style={{ width: '80px', height: '80px', marginBottom: '1rem', objectFit: 'contain' }} />
                 <h2>등대 학습 앱에 오신 것을 환영합니다</h2>
                 <p>시작하려면 로그인하거나 계정을 만드세요</p>
                 <button onClick={() => setShowAuthModal(true)} className="btn-primary">
