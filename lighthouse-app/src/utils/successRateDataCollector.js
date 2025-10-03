@@ -43,7 +43,6 @@ export class SuccessRateDataCollector {
    */
   collectLearningPatternData(studyData, userId) {
     const sessions = studyData.sessions || []
-    const subjects = studyData.subjects || {}
 
     // 총 학습 시간 계산
     const totalStudyHours = sessions.reduce((sum, session) => sum + (session.duration || 0), 0)
@@ -179,7 +178,6 @@ export class SuccessRateDataCollector {
     if (dates.length < 2) return 0
 
     // 연속 학습 일수 계산
-    let consecutiveDays = 0
     let maxConsecutiveDays = 0
     let currentStreak = 1
 

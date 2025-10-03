@@ -6,7 +6,6 @@ import { Target, Menu, Settings } from 'lucide-react'
 import oceanBg from '../assets/images/backgrounds/평화로운 바닷가 풍경.png'
 import lighthouse from '../assets/images/backgrounds/붉은 등대와 빛의 섬.png'
 import clouds from '../assets/images/backgrounds/부드러운 구름들의 디지털 일러스트.png'
-import waves from '../assets/images/backgrounds/부드러운 파도 일러스트 4종.png'
 import { boatImages } from '../constants/boatOptions'
 import logo from '../assets/images/logos/등대 로고.png'
 
@@ -48,7 +47,7 @@ function OceanView({ studyData }) {
     let totalHours = 0
     let targetHours = 0
 
-    subjectsList.forEach(([subjectId, subject]) => {
+    subjectsList.forEach(([, subject]) => {
       totalHours += subject.totalHours || 0
       targetHours += subject.targetHours || 0
     })
@@ -57,7 +56,8 @@ function OceanView({ studyData }) {
   }
 
   const progress = calculateOverallProgress()
-  const boatPosition = 5 + (progress * 0.75) // 5%에서 80%까지 이동
+  const boatPosition = 5 + (progress * 0.70) // 5%에서 75%까지 이동 (좌하단 → 우상단)
+  const boatVerticalPosition = 80 - (progress * 0.40) // 80%에서 40%로 이동 (하단 → 상단)
   const lighthouseGlow = progress > 80 ? 'lighthouse-glow' : ''
   const boatBob = Math.sin(waveOffset * Math.PI / 180) * 8 // 배의 상하 움직임
 
@@ -124,6 +124,7 @@ function OceanView({ studyData }) {
           className="boat-container"
           style={{
             left: `${boatPosition}%`,
+            top: `${boatVerticalPosition}%`,
             transform: waveAnimationEnabled
               ? `translateY(${boatBob}px) rotate(${Math.sin(waveOffset * Math.PI / 180) * 2}deg)`
               : 'translateY(0px) rotate(0deg)'

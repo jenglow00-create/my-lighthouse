@@ -61,37 +61,8 @@ const analyzeUserPattern = (sessionData, userProfile, allSessions) => {
   }
 }
 
-// 사용자 순위 계산 (같은 목표의 사용자들 중에서)
-const calculateUserRanking = (userPattern) => {
-  // 사용자의 종합 점수 계산
-  let score = 0
 
-  // 집중도 점수 (0-25점)
-  score += userPattern.avgConcentration * 5
-
-  // 이해도 점수 (0-25점)
-  score += userPattern.avgUnderstanding * 5
-
-  // 피로도 점수 (낮을수록 좋음, 0-15점)
-  score += (6 - userPattern.avgFatigue) * 3
-
-  // 학습량 점수 (0-20점)
-  const studyRatio = userPattern.weeklyHours / (userPattern.dailyTargetHours * 7)
-  score += Math.min(studyRatio * 20, 20)
-
-  // 점수 향상 점수 (0-15점)
-  if (userPattern.scoreProgress > 0) score += 15
-  else if (userPattern.scoreProgress === 0) score += 8
-
-  // 총점을 퍼센타일로 변환 (높을수록 상위)
-  const maxScore = 100
-  const percentile = Math.min((score / maxScore) * 100, 95)
-
-  // 상위 몇 %인지 반환 (100 - percentile)
-  return Math.max(100 - percentile, 5)
-}
-
-const generateComparison = (userPattern, allSessions) => {
+const generateComparison = (userPattern) => {
   const comparisons = [
     {
       condition: userPattern.weeklyHours >= userPattern.dailyTargetHours * 5,
@@ -121,7 +92,7 @@ const generateComparison = (userPattern, allSessions) => {
     : `같은 목표의 사용자 중 상위 ${Math.floor(Math.random() * 20) + 30}%에 속합니다`
 }
 
-const generateRecommendation = (userPattern, sessionData) => {
+const generateRecommendation = (userPattern) => {
   const recommendations = []
 
   // 학습 유형 균형 체크
@@ -254,7 +225,7 @@ const analyzeScoreProgress = (sessions) => {
 }
 
 // 실시간 피드백 생성 (타이핑할 때마다)
-export const generateRealTimeFeedback = (fieldName, value, sessionData, userProfile) => {
+export const generateRealTimeFeedback = (fieldName, value) => {
   const feedback = []
 
   switch (fieldName) {

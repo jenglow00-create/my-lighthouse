@@ -21,6 +21,7 @@ function Navigation({ currentUser, onLogout, onShowAuth }) {
         <h1>등대</h1>
       </div>
       <div className="nav-links">
+        {/* eslint-disable-next-line no-unused-vars */}
         {navItems.map(({ path, icon: Icon, label }) => (
           <Link
             key={path}
