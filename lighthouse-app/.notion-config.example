@@ -1,0 +1,12 @@
+# Notion API Configuration
+# 1. Notion Integration 생성: https://www.notion.so/my-integrations
+# 2. Integration Token 복사
+# 3. Notion에서 2개 페이지 생성:
+#    - 페이지 1: "Lighthouse 개발 현황" (실시간 통계)
+#    - 페이지 2: "Lighthouse 개발일지" (블로그 형식)
+# 4. 각 페이지에서 "연결 추가" > 생성한 Integration 선택
+# 5. 각 페이지 URL에서 페이지 ID 복사 (예: https://notion.so/YOUR_PAGE_ID)
+
+NOTION_API_KEY=secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+NOTION_PAGE_ID_STATUS=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+NOTION_PAGE_ID_BLOG=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx

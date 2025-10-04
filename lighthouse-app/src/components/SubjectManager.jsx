@@ -1,13 +1,16 @@
 import { useState } from 'react'
 import { Plus, Target, Calendar, Clock, X, Edit3, TrendingUp, Award } from 'lucide-react'
+import { EXAM_CATEGORIES, getExamTypeById, migrateLegacyExamType } from '../constants/examTypes'
 
 function SubjectManager({ studyData, setStudyData }) {
   const [isAddingSubject, setIsAddingSubject] = useState(false)
   const [editingSubject, setEditingSubject] = useState(null)
   const [showScoreForm, setShowScoreForm] = useState(null) // subjectId
+  const [selectedCategory, setSelectedCategory] = useState('language') // 선택된 대주제
   const [subjectForm, setSubjectForm] = useState({
     name: '',
     examType: 'TOEIC',
+    examCategory: 'language',
     targetHours: 100,
     examDate: '',
     targetScore: 800,
@@ -19,17 +22,6 @@ function SubjectManager({ studyData, setStudyData }) {
     testDate: new Date().toISOString().split('T')[0]
   })
 
-  const examTypes = [
-    { id: 'TOEIC', name: 'TOEIC', description: '영어 능력 시험' },
-    { id: 'TOEFL', name: 'TOEFL', description: '영어 시험' },
-    { id: 'IELTS', name: 'IELTS', description: '국제 영어 시험' },
-    { id: 'Korean History', name: '한국사', description: '한국사 시험' },
-    { id: 'Civil Service', name: '공무원', description: '공무원 시험' },
-    { id: 'SAT', name: 'SAT', description: '대학 입학 시험' },
-    { id: 'GRE', name: 'GRE', description: '대학원 입학 시험' },
-    { id: 'Other', name: '기타', description: '사용자 지정 시험' }
-  ]
-
   const handleSubmit = (e) => {
     e.preventDefault()
 
@@ -39,7 +31,9 @@ function SubjectManager({ studyData, setStudyData }) {
       id: subjectId,
       createdAt: editingSubject ? studyData.subjects[editingSubject]?.createdAt : new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      totalHours: editingSubject ? studyData.subjects[editingSubject]?.totalHours || 0 : 0
+      totalHours: editingSubject ? studyData.subjects[editingSubject]?.totalHours || 0 : 0,
+      // 선택된 시험 유형의 기본값 적용
+      targetScore: subjectForm.targetScore || getExamTypeById(subjectForm.examType)?.defaultTarget || 100
     }
 
     setStudyData(prev => ({
@@ -92,27 +86,60 @@ function SubjectManager({ studyData, setStudyData }) {
     setSubjectForm({
       name: '',
       examType: 'TOEIC',
+      examCategory: 'language',
       targetHours: 100,
       examDate: '',
       targetScore: 800,
       description: ''
     })
+    setSelectedCategory('language')
     setIsAddingSubject(false)
     setEditingSubject(null)
   }
 
   const handleEdit = (subjectId) => {
     const subject = studyData.subjects[subjectId]
+    // 구버전 시험 유형 마이그레이션
+    const migratedExamType = migrateLegacyExamType(subject.examType)
+    const examTypeInfo = getExamTypeById(migratedExamType)
+
     setSubjectForm({
       name: subject.name,
-      examType: subject.examType,
+      examType: migratedExamType,
+      examCategory: examTypeInfo?.categoryId || subject.examCategory || 'other',
       targetHours: subject.targetHours,
       examDate: subject.examDate,
       targetScore: subject.targetScore,
       description: subject.description || ''
     })
+    setSelectedCategory(examTypeInfo?.categoryId || subject.examCategory || 'other')
     setEditingSubject(subjectId)
     setIsAddingSubject(true)
+  }
+
+  // 카테고리 변경시 해당 카테고리의 첫 번째 시험 유형으로 자동 선택
+  const handleCategoryChange = (categoryId) => {
+    setSelectedCategory(categoryId)
+    const category = EXAM_CATEGORIES.find(cat => cat.id === categoryId)
+    if (category && category.subcategories.length > 0) {
+      const firstExamType = category.subcategories[0]
+      setSubjectForm(prev => ({
+        ...prev,
+        examCategory: categoryId,
+        examType: firstExamType.id,
+        targetScore: firstExamType.defaultTarget
+      }))
+    }
+  }
+
+  // 시험 유형 변경시 기본 점수 자동 설정
+  const handleExamTypeChange = (examTypeId) => {
+    const examType = getExamTypeById(examTypeId)
+    setSubjectForm(prev => ({
+      ...prev,
+      examType: examTypeId,
+      targetScore: examType?.defaultTarget || prev.targetScore
+    }))
   }
 
   const handleDelete = (subjectId) => {
@@ -209,15 +236,37 @@ function SubjectManager({ studyData, setStudyData }) {
               </div>
 
               <div className="form-group">
-                <label>시험 유형</label>
+                <label>시험 분류 (대주제)</label>
+                <div className="category-selector">
+                  {EXAM_CATEGORIES.map(category => (
+                    <button
+                      key={category.id}
+                      type="button"
+                      className={`category-btn ${selectedCategory === category.id ? 'active' : ''}`}
+                      onClick={() => handleCategoryChange(category.id)}
+                    >
+                      <span className="category-icon">{category.icon}</span>
+                      <span className="category-name">{category.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>시험 유형 (소주제)</label>
                 <select
                   value={subjectForm.examType}
-                  onChange={(e) => setSubjectForm(prev => ({ ...prev, examType: e.target.value }))}
+                  onChange={(e) => handleExamTypeChange(e.target.value)}
                 >
-                  {examTypes.map(exam => (
-                    <option key={exam.id} value={exam.id}>{exam.name}</option>
+                  {EXAM_CATEGORIES.find(cat => cat.id === selectedCategory)?.subcategories.map(exam => (
+                    <option key={exam.id} value={exam.id}>
+                      {exam.name} {exam.description && `- ${exam.description}`}
+                    </option>
                   ))}
                 </select>
+                <small className="form-hint">
+                  선택한 시험: {getExamTypeById(subjectForm.examType)?.name || '없음'}
+                </small>
               </div>
 
               <div className="form-row">
@@ -364,12 +413,18 @@ function SubjectManager({ studyData, setStudyData }) {
             const latestScore = getLatestScore(subject)
             const scoreTrend = calculateScoreTrend(subject)
 
+            // 시험 유형 정보 가져오기
+            const migratedExamType = migrateLegacyExamType(subject.examType)
+            const examTypeInfo = getExamTypeById(migratedExamType)
+
             return (
               <div key={subjectId} className="subject-card">
                 <div className="subject-header">
                   <div className="subject-info">
                     <h3>{subject.name}</h3>
-                    <span className="exam-type">{subject.examType}</span>
+                    <span className="exam-type">
+                      {examTypeInfo ? `${examTypeInfo.categoryIcon} ${examTypeInfo.name}` : subject.examType}
+                    </span>
                   </div>
                   <div className="subject-actions">
                     <button onClick={() => handleEdit(subjectId)} className="edit-btn">

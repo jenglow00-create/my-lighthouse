@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "notion": "node ../update-notion-dual.js",
+    "dev:notion": "node ../update-notion-dual.js && vite"
   },
   "dependencies": {
     "lucide-react": "^0.544.0",

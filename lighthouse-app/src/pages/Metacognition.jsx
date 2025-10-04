@@ -384,17 +384,58 @@ function Metacognition({ studyData, setStudyData }) {
             </button>
           </div>
           <div className="reflections-preview">
-            {recentReflections.slice(0, 3).map(reflection => (
-              <div key={reflection.id} className="reflection-preview-card">
-                <div className="preview-header">
-                  <span className="preview-topic">{reflection.selectedTopic || reflection.topic}</span>
-                  <span className="preview-date">{reflection.date}</span>
+            {recentReflections.slice(0, 3).map(reflection => {
+              const ratingOption = learningRatingOptions.find(opt => opt.value === reflection.learningRating)
+              return (
+                <div key={reflection.id} className="reflection-preview-card">
+                  <div className="preview-header">
+                    <span className="preview-topic">{reflection.selectedTopic || reflection.topic}</span>
+                    <span className="preview-date">{reflection.date}</span>
+                  </div>
+
+                  <div className="preview-details">
+                    <div className="preview-row">
+                      <span className="preview-label">📚 공부한 주제:</span>
+                      <span className="preview-value">{reflection.allTopics?.join(', ') || reflection.selectedTopic}</span>
+                    </div>
+
+                    <div className="preview-row">
+                      <span className="preview-label">⭐ 학습도:</span>
+                      <span
+                        className="preview-value preview-rating"
+                        style={{ color: ratingOption?.color || '#666' }}
+                      >
+                        {reflection.learningRating ? `${reflection.learningRating}/5 - ${ratingOption?.label}` : '평가 없음'}
+                      </span>
+                    </div>
+
+                    {reflection.tomorrowPlan && (
+                      <div className="preview-row">
+                        <span className="preview-label">📅 내일 계획:</span>
+                        <span className="preview-value preview-truncate">
+                          {reflection.tomorrowPlan.length > 50
+                            ? reflection.tomorrowPlan.substring(0, 50) + '...'
+                            : reflection.tomorrowPlan
+                          }
+                        </span>
+                      </div>
+                    )}
+
+                    {reflection.needsMoreStudy && (
+                      <div className="preview-row">
+                        <span className="preview-label">🔍 더 공부할 것:</span>
+                        <span className="preview-value preview-truncate">
+                          {reflection.needsMoreStudy.length > 50
+                            ? reflection.needsMoreStudy.substring(0, 50) + '...'
+                            : reflection.needsMoreStudy
+                          }
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="preview-reflection">
-                  {reflection.recallContent?.substring(0, 100) || reflection.reflection?.substring(0, 100)}...
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}

@@ -135,7 +135,7 @@
 .lighthouse-container {
   position: absolute;
   right: 5%;
-  top: 15%;
+  top: 35%;
   z-index: 5;
   transform-origin: center bottom;
 }
