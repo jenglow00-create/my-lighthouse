@@ -1,60 +1,90 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Clock, BookOpen, Calendar, Brain, TrendingUp, Users, Target } from 'lucide-react'
-import { generateInstantFeedback, generateRealTimeFeedback } from '../utils/aiAnalysis'
+import { Plus, Clock, BookOpen, Calendar, Brain, TrendingUp, Users } from 'lucide-react'
+import { generateInstantFeedback, generateRealTimeFeedback, type AIFeedback } from '@/utils/aiAnalysis'
+import type { StudySession, UserData, Rating } from '@/types'
 
-function StudyLog({ studyData, setStudyData }) {
+interface StudyLogProps {
+  studyData: UserData
+  setStudyData: React.Dispatch<React.SetStateAction<UserData>>
+}
+
+interface SessionFormData {
+  duration: string
+  subjectId: string
+  notes: string
+  date: string
+  studyType: string
+  concentration: Rating
+  understanding: Rating
+  fatigue: Rating
+}
+
+interface StudyTypeInfo {
+  id: string
+  name: string
+  description: string
+}
+
+function StudyLog({ studyData, setStudyData }: StudyLogProps) {
   const navigate = useNavigate()
   const [isLogging, setIsLogging] = useState(false)
   const [showReflectionPrompt, setShowReflectionPrompt] = useState(false)
   const [lastSessionTopic, setLastSessionTopic] = useState('')
-  const [aiFeedback, setAiFeedback] = useState(null)
-  const [realTimeFeedback, setRealTimeFeedback] = useState({})
+  const [aiFeedback, setAiFeedback] = useState<AIFeedback | null>(null)
+  const [realTimeFeedback, setRealTimeFeedback] = useState<Record<string, string>>({})
   const [showFeedback, setShowFeedback] = useState(false)
-  const [sessionData, setSessionData] = useState({
+  const [sessionData, setSessionData] = useState<SessionFormData>({
     duration: '',
     subjectId: '',
     notes: '',
     date: new Date().toISOString().split('T')[0],
-    studyType: '', // 학습 유형
-    concentration: 3, // 집중도 1-5
-    understanding: 3, // 이해도 1-5
-    fatigue: 3 // 피로도 1-5
+    studyType: '',
+    concentration: 3,
+    understanding: 3,
+    fatigue: 3
   })
 
-  const studyTypes = [
+  const studyTypes: StudyTypeInfo[] = [
     { id: 'concept', name: '개념 이해', description: '교재 읽기, 강의 듣기' },
     { id: 'practice', name: '문제 풀이', description: '기출문제, 모의고사' },
     { id: 'memorize', name: '암기', description: '단어, 공식' },
     { id: 'review', name: '복습', description: '오답 정리, 재학습' }
   ]
 
-  const ratingLabels = {
+  const ratingLabels: Record<'concentration' | 'understanding' | 'fatigue', string[]> = {
     concentration: ['산만', '떨어짐', '보통', '집중', '매우 집중'],
     understanding: ['전혀 모름', '조금 알겠음', '어느정도', '잘 알겠음', '완전 이해'],
     fatigue: ['매우 피곤', '피곤', '보통', '쌈', '매우 쌈']
   }
 
-  // AI 피드백 생성 (데이터 변경시마다)
+  // AI 피드백 생성
   useEffect(() => {
     if (sessionData.duration && sessionData.concentration && sessionData.understanding) {
       const userProfile = studyData.personalInfo || {}
       const allSessions = studyData.sessions || []
 
-      const feedback = generateInstantFeedback(sessionData, userProfile, allSessions)
+      // sessionData를 Partial<StudySession> 형식으로 변환
+      const sessionForFeedback: Partial<StudySession> = {
+        duration: parseFloat(sessionData.duration) || 0,
+        concentration: sessionData.concentration,
+        understanding: sessionData.understanding,
+        fatigue: sessionData.fatigue,
+        studyType: sessionData.studyType as any
+      }
+
+      const feedback = generateInstantFeedback(sessionForFeedback, userProfile, allSessions)
       setAiFeedback(feedback)
       setShowFeedback(true)
     }
-  }, [sessionData.concentration, sessionData.understanding, sessionData.fatigue, sessionData.duration])
+  }, [sessionData.concentration, sessionData.understanding, sessionData.fatigue, sessionData.duration, sessionData.studyType, studyData.personalInfo, studyData.sessions])
 
   // 실시간 피드백 처리
-  const handleRealTimeFeedback = (fieldName, value) => {
-    const userProfile = studyData.personalInfo || {}
-    const feedback = generateRealTimeFeedback(fieldName, value, sessionData, userProfile)
+  const handleRealTimeFeedback = (fieldName: string, value: number | string) => {
+    const feedback = generateRealTimeFeedback(fieldName, value)
 
     if (feedback.length > 0) {
       setRealTimeFeedback(prev => ({ ...prev, [fieldName]: feedback[0] }))
-      // 3초 후 자동 숨김
       setTimeout(() => {
         setRealTimeFeedback(prev => {
           const newFeedback = { ...prev }
@@ -65,18 +95,18 @@ function StudyLog({ studyData, setStudyData }) {
     }
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!sessionData.duration || !sessionData.subjectId || !sessionData.studyType) return
 
-    const newSession = {
+    const newSession: StudySession = {
       id: Date.now(),
       subjectId: sessionData.subjectId,
       duration: parseFloat(sessionData.duration),
       notes: sessionData.notes,
       date: sessionData.date,
       timestamp: new Date().toISOString(),
-      studyType: sessionData.studyType,
+      studyType: sessionData.studyType as any, // StudyType enum으로 변환 필요
       concentration: sessionData.concentration,
       understanding: sessionData.understanding,
       fatigue: sessionData.fatigue
@@ -94,12 +124,12 @@ function StudyLog({ studyData, setStudyData }) {
       return {
         ...prev,
         subjects: updatedSubjects,
-        sessions: [newSession, ...prev.sessions]
+        sessions: [newSession, ...(prev.sessions || [])]
       }
     })
 
     // 성찰 자동 트리거 체크
-    const reflectionEnabled = studyData.globalSettings?.reflectionEnabled !== false
+    const reflectionEnabled = (studyData.settings?.autoReflection?.enabled) !== false
     if (reflectionEnabled) {
       setLastSessionTopic('학습 세션')
       setShowReflectionPrompt(true)
@@ -239,7 +269,7 @@ function StudyLog({ studyData, setStudyData }) {
                 <div className="rating-item">
                   <label>집중도</label>
                   <div className="rating-buttons">
-                    {[1,2,3,4,5].map(num => (
+                    {([1, 2, 3, 4, 5] as const).map(num => (
                       <button
                         key={num}
                         type="button"
@@ -262,7 +292,7 @@ function StudyLog({ studyData, setStudyData }) {
                 <div className="rating-item">
                   <label>이해도</label>
                   <div className="rating-buttons">
-                    {[1,2,3,4,5].map(num => (
+                    {([1, 2, 3, 4, 5] as const).map(num => (
                       <button
                         key={num}
                         type="button"
@@ -285,7 +315,7 @@ function StudyLog({ studyData, setStudyData }) {
                 <div className="rating-item">
                   <label>피로도</label>
                   <div className="rating-buttons">
-                    {[1,2,3,4,5].map(num => (
+                    {([1, 2, 3, 4, 5] as const).map(num => (
                       <button
                         key={num}
                         type="button"
@@ -307,7 +337,6 @@ function StudyLog({ studyData, setStudyData }) {
               </div>
             </div>
 
-
             {/* AI 피드백 박스 */}
             {showFeedback && aiFeedback && (
               <div className="ai-feedback-box">
@@ -315,7 +344,6 @@ function StudyLog({ studyData, setStudyData }) {
                   <TrendingUp size={20} />
                   <h4>AI 분석 결과</h4>
                 </div>
-
 
                 {aiFeedback.comparison && (
                   <div className="feedback-item comparison">
@@ -351,7 +379,7 @@ function StudyLog({ studyData, setStudyData }) {
                 value={sessionData.notes}
                 onChange={(e) => setSessionData(prev => ({ ...prev, notes: e.target.value }))}
                 placeholder="무엇을 배웠나요? 어떤 어려움이 있었나요?"
-                rows="3"
+                rows={3}
               />
             </div>
 
