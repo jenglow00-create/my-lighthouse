@@ -15,6 +15,56 @@ body {
   min-height: 100vh;
 }
 
+/* Accessibility */
+/* Screen reader only text */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Focus indicators for keyboard users */
+*:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Button focus states */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 2px;
+}
+
+/* Minimum touch target sizes (44x44px for mobile) */
+button,
+a {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Ensure text inputs also have min height */
+input,
+textarea,
+select {
+  min-height: 44px;
+}
+
+/* Form helpers */
+.help-text {
+  display: block;
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
 /* App layout */
 .app {
   min-height: 100vh;
@@ -2260,6 +2310,14 @@ body {
 .rating-label {
   font-size: 0.875rem;
   text-align: center;
+}
+
+.rating-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+  display: block;
 }
 
 /* Evidence Section */
