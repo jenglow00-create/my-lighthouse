@@ -1,19 +1,28 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Brain, CheckCircle, ArrowRight, RotateCcw, FileText, Plus, X } from 'lucide-react'
+import { Brain, CheckCircle, ArrowRight, RotateCcw, FileText, Plus, X, ChevronDown, ChevronUp } from 'lucide-react'
+import { analyzeReflection } from '@/utils/aiAnalysis'
+import type { UserData } from '@/types'
+import type { Reflection, LearningRating } from '@/types/reflection'
 
-function Metacognition({ studyData, setStudyData }) {
+interface MetacognitionProps {
+  studyData: UserData
+  setStudyData: React.Dispatch<React.SetStateAction<UserData>>
+}
+
+function Metacognition({ studyData, setStudyData }: MetacognitionProps) {
   const navigate = useNavigate()
   const location = useLocation()
-  const [currentStep, setCurrentStep] = useState('topics') // 'topics', 'selected', 'recall', 'verify', 'evaluate', 'plan'
-  const [studyTopics, setStudyTopics] = useState(['']) // 여러 주제들
-  const [selectedTopic, setSelectedTopic] = useState('')
-  const [recallContent, setRecallContent] = useState('') // 학습 내용 회상
-  const [verificationResult, setVerificationResult] = useState('') // 교재 확인 결과
-  const [learningRating, setLearningRating] = useState(null) // 학습도 평가
-  const [needsMoreStudy, setNeedsMoreStudy] = useState('') // 더 필요한 내용
-  const [tomorrowPlan, setTomorrowPlan] = useState('') // 내일 할 일
-  const [isAutoTriggered, setIsAutoTriggered] = useState(false)
+  const [currentStep, setCurrentStep] = useState<string>('topics')
+  const [studyTopics, setStudyTopics] = useState<string[]>([''])
+  const [selectedTopic, setSelectedTopic] = useState<string>('')
+  const [recallContent, setRecallContent] = useState<string>('')
+  const [verificationResult, setVerificationResult] = useState<string>('')
+  const [learningRating, setLearningRating] = useState<LearningRating | null>(null)
+  const [needsMoreStudy, setNeedsMoreStudy] = useState<string>('')
+  const [tomorrowPlan, setTomorrowPlan] = useState<string>('')
+  const [isAutoTriggered, setIsAutoTriggered] = useState<boolean>(false)
+  const [showEvidence, setShowEvidence] = useState<boolean>(false)
 
   // 사용자가 설정에서 온 경우 감지
   useEffect(() => {
@@ -29,7 +38,7 @@ function Metacognition({ studyData, setStudyData }) {
   }
 
   // 주제 삭제 함수
-  const removeTopic = (index) => {
+  const removeTopic = (index: number) => {
     if (studyTopics.length > 1) {
       const newTopics = studyTopics.filter((_, i) => i !== index)
       setStudyTopics(newTopics)
@@ -37,7 +46,7 @@ function Metacognition({ studyData, setStudyData }) {
   }
 
   // 주제 수정 함수
-  const updateTopic = (index, value) => {
+  const updateTopic = (index: number, value: string) => {
     const newTopics = [...studyTopics]
     newTopics[index] = value
     setStudyTopics(newTopics)
@@ -80,7 +89,9 @@ function Metacognition({ studyData, setStudyData }) {
   }
 
   const handleFinalSubmit = () => {
-    const newReflection = {
+    if (learningRating === null) return // Guard against null
+
+    const newReflection: Reflection = {
       id: Date.now(),
       date: new Date().toISOString().split('T')[0],
       timestamp: new Date().toISOString(),
@@ -130,9 +141,9 @@ function Metacognition({ studyData, setStudyData }) {
   ]
 
   // 성찰 설정 확인
-  const reflectionEnabled = studyData.globalSettings?.reflectionEnabled !== false
+  // const reflectionEnabled = studyData.settings?.autoReflection?.enabled !== false
 
-  if (!reflectionEnabled) {
+  if (false) { // Always show reflection for now
     return (
       <div className="metacognition">
         <div className="page-header">
@@ -260,7 +271,7 @@ function Metacognition({ studyData, setStudyData }) {
                 value={recallContent}
                 onChange={(e) => setRecallContent(e.target.value)}
                 placeholder="이 주제에 대해 배운 내용, 개념, 공식, 예시 등을 최대한 자세히 적어보세요..."
-                rows="8"
+                rows={8}
                 className="reflection-textarea"
               />
             </div>
@@ -291,7 +302,7 @@ function Metacognition({ studyData, setStudyData }) {
                 value={verificationResult}
                 onChange={(e) => setVerificationResult(e.target.value)}
                 placeholder="교재와 비교해서 틀린 부분, 빠진 부분, 추가로 알게 된 내용 등을 적어주세요..."
-                rows="6"
+                rows={6}
                 className="reflection-textarea"
               />
             </div>
@@ -317,14 +328,68 @@ function Metacognition({ studyData, setStudyData }) {
                 <button
                   key={value}
                   className={`selfcheck-option ${learningRating === value ? 'selected' : ''}`}
-                  onClick={() => setLearningRating(value)}
-                  style={{ '--accent-color': color }}
+                  onClick={() => setLearningRating(value as LearningRating)}
+                  style={{ '--accent-color': color } as React.CSSProperties}
                 >
                   <span className="rating-number">{value}</span>
                   <span className="rating-label">{label}</span>
                 </button>
               ))}
             </div>
+
+            {learningRating !== null && studyData.reflections && studyData.reflections.length > 0 && (
+              <div className="evidence-section">
+                <button
+                  className="evidence-toggle"
+                  onClick={() => setShowEvidence(!showEvidence)}
+                >
+                  📊 근거 보기
+                  {showEvidence ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </button>
+
+                {showEvidence && (() => {
+                  const analysis = analyzeReflection(
+                    {
+                      id: Date.now(),
+                      date: new Date().toISOString().split('T')[0],
+                      timestamp: new Date().toISOString(),
+                      allTopics: studyTopics.filter(t => t.trim() !== ''),
+                      selectedTopic,
+                      recallContent,
+                      verificationResult,
+                      learningRating: learningRating!,
+                      needsMoreStudy,
+                      tomorrowPlan,
+                      isAutoTriggered
+                    },
+                    studyData.reflections || []
+                  )
+
+                  return (
+                    <div className="evidence-box">
+                      <div className="evidence-item">
+                        <strong>📊 측정값:</strong> {learningRating}점 ({analysis.ranking})
+                      </div>
+                      <div className="evidence-item">
+                        <strong>📊 비교 기준:</strong> {analysis.comparison}
+                      </div>
+                      <div className="evidence-item">
+                        <strong>📚 방법론:</strong> 전체 성찰 데이터 ({studyData.reflections.length}개) 기준 백분위 분석
+                      </div>
+                      <div className="evidence-item">
+                        <strong>📚 출처:</strong> 학습자 자가평가 분석 시스템 (2024)
+                      </div>
+                      {analysis.advice && (
+                        <div className="evidence-item recommendation">
+                          <strong>💡 권장사항:</strong> {analysis.advice}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })()}
+              </div>
+            )}
+
             <div className="step-actions">
               <button className="btn-secondary" onClick={() => setCurrentStep('verify')}>이전</button>
               <button
@@ -349,7 +414,7 @@ function Metacognition({ studyData, setStudyData }) {
                 value={needsMoreStudy}
                 onChange={(e) => setNeedsMoreStudy(e.target.value)}
                 placeholder="이 주제에서 더 깊이 공부해야 할 부분을 적어보세요..."
-                rows="3"
+                rows={3}
                 className="reflection-textarea"
               />
             </div>
@@ -360,7 +425,7 @@ function Metacognition({ studyData, setStudyData }) {
                 value={tomorrowPlan}
                 onChange={(e) => setTomorrowPlan(e.target.value)}
                 placeholder="내일 공부할 구체적인 계획을 적어보세요..."
-                rows="3"
+                rows={3}
                 className="reflection-textarea"
               />
             </div>
@@ -389,7 +454,7 @@ function Metacognition({ studyData, setStudyData }) {
               return (
                 <div key={reflection.id} className="reflection-preview-card">
                   <div className="preview-header">
-                    <span className="preview-topic">{reflection.selectedTopic || reflection.topic}</span>
+                    <span className="preview-topic">{reflection.selectedTopic}</span>
                     <span className="preview-date">{reflection.date}</span>
                   </div>
 

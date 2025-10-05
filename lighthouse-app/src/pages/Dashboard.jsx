@@ -1,9 +1,11 @@
-import { BarChart3, Clock, Target, TrendingUp, Calendar, BookOpen, ChevronDown, Filter } from 'lucide-react'
+import { BarChart3, Clock, Target, TrendingUp, Calendar, BookOpen, ChevronDown, Filter, ChevronUp } from 'lucide-react'
 import { useState } from 'react'
+import { analyzeWeeklyPattern } from '@/utils/aiAnalysis'
 
 function Dashboard({ studyData }) {
   const [selectedSubjectId, setSelectedSubjectId] = useState('all')
   const [showSubjectFilter, setShowSubjectFilter] = useState(false)
+  const [showWeeklyEvidence, setShowWeeklyEvidence] = useState(false)
 
   const sessions = studyData.sessions || []
   const reflections = studyData.reflections || []
@@ -209,6 +211,55 @@ function Dashboard({ studyData }) {
               <span className="time-value">{stats.thisMonth.toFixed(1)}시간</span>
             </div>
           </div>
+
+          {filteredSessions.length > 0 && (() => {
+            const oneWeekAgo = new Date()
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+            const weekSessions = filteredSessions.filter(s => new Date(s.date) >= oneWeekAgo)
+
+            if (weekSessions.length === 0) return null
+
+            const weeklyAnalysis = analyzeWeeklyPattern(weekSessions)
+
+            return (
+              <div className="evidence-section">
+                <button
+                  className="evidence-toggle"
+                  onClick={() => setShowWeeklyEvidence(!showWeeklyEvidence)}
+                >
+                  📊 주간 분석 근거
+                  {showWeeklyEvidence ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </button>
+
+                {showWeeklyEvidence && (
+                  <div className="evidence-box">
+                    <div className="evidence-item">
+                      <strong>📊 평가:</strong> {weeklyAnalysis.feedback.label} - {weeklyAnalysis.feedback.message}
+                    </div>
+                    <div className="evidence-item">
+                      <strong>📊 측정값:</strong> {weeklyAnalysis.feedback.evidence.value}{weeklyAnalysis.feedback.evidence.unit}
+                    </div>
+                    <div className="evidence-item">
+                      <strong>📊 비교 기준:</strong> {weeklyAnalysis.feedback.evidence.benchmark}
+                    </div>
+                    <div className="evidence-item">
+                      <strong>📚 출처:</strong> {weeklyAnalysis.feedback.evidence.source}
+                    </div>
+                    {weeklyAnalysis.feedback.recommendations.length > 0 && (
+                      <div className="evidence-item recommendation">
+                        <strong>💡 권장사항:</strong>
+                        <ul style={{ marginTop: '0.5rem', paddingLeft: '1.5rem' }}>
+                          {weeklyAnalysis.feedback.recommendations.slice(0, 3).map((rec, idx) => (
+                            <li key={idx}>{rec}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )
+          })()}
 
           {recentActivity.length > 0 ? (
             <div className="activity-list">
