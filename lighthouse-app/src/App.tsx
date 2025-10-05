@@ -207,8 +207,11 @@ function App() {
   return (
     <Router>
       <div className="app">
+        <a href="#main-content" className="skip-link">
+          메인 컨텐츠로 건너뛰기
+        </a>
         <Navigation currentUser={currentUser} onLogout={handleLogout} onShowAuth={() => setShowAuthModal(true)} />
-        <main className="main-content">
+        <main id="main-content" className="main-content" tabIndex={-1}>
           {currentUser ? (
             <Routes>
               <Route path="/" element={<OceanView studyData={studyData} />} />

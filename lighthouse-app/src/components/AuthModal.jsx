@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import FocusLock from 'react-focus-lock'
 import { X, User, Mail, Lock, LogIn, UserPlus } from 'lucide-react'
 
 function AuthModal({ isOpen, onClose, onAuth }) {
@@ -10,6 +11,21 @@ function AuthModal({ isOpen, onClose, onAuth }) {
     confirmPassword: ''
   })
   const [error, setError] = useState('')
+  const firstInputRef = useRef(null)
+
+  // Focus first input when modal opens
+  useEffect(() => {
+    if (isOpen && firstInputRef.current) {
+      firstInputRef.current.focus()
+    }
+  }, [isOpen])
+
+  // Handle keyboard shortcuts
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      onClose()
+    }
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -112,120 +128,138 @@ function AuthModal({ isOpen, onClose, onAuth }) {
   if (!isOpen) return null
 
   return (
-    <div className="auth-modal-overlay">
-      <div className="auth-modal">
-        <div className="auth-header">
-          <h2>
-            {mode === 'login' ? (
-              <>
-                <LogIn size={24} />
-                로그인
-              </>
-            ) : (
-              <>
-                <UserPlus size={24} />
-                회원가입
-              </>
-            )}
-          </h2>
-          <button onClick={onClose} className="close-btn">
-            <X size={20} />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label>
-              <User size={16} />
-              사용자명
-            </label>
-            <input
-              type="text"
-              value={formData.username}
-              onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
-              placeholder="사용자명을 입력하세요"
-              required
-            />
-          </div>
-
-          {mode === 'register' && (
-            <div className="form-group">
-              <label>
-                <Mail size={16} />
-                이메일
-              </label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                placeholder="이메일을 입력하세요"
-                required
-              />
-            </div>
-          )}
-
-          <div className="form-group">
-            <label>
-              <Lock size={16} />
-              비밀번호
-            </label>
-            <input
-              type="password"
-              value={formData.password}
-              onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-              placeholder="비밀번호를 입력하세요"
-              required
-            />
-          </div>
-
-          {mode === 'register' && (
-            <div className="form-group">
-              <label>
-                <Lock size={16} />
-                비밀번호 확인
-              </label>
-              <input
-                type="password"
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                placeholder="비밀번호를 다시 입력하세요"
-                required
-              />
-            </div>
-          )}
-
-          {error && (
-            <div className="error-message">
-              {error}
-            </div>
-          )}
-
-          <div className="auth-actions">
-            <button type="submit" className="btn-primary">
-              {mode === 'login' ? '로그인' : '회원가입'}
+    <FocusLock>
+      <div
+        className="auth-modal-overlay"
+        role="dialog"
+        aria-labelledby="auth-modal-title"
+        aria-modal="true"
+        onKeyDown={handleKeyDown}
+      >
+        <div className="auth-modal">
+          <div className="auth-header">
+            <h2 id="auth-modal-title">
+              {mode === 'login' ? (
+                <>
+                  <LogIn size={24} aria-hidden="true" />
+                  로그인
+                </>
+              ) : (
+                <>
+                  <UserPlus size={24} aria-hidden="true" />
+                  회원가입
+                </>
+              )}
+            </h2>
+            <button
+              onClick={onClose}
+              className="close-btn"
+              aria-label="모달 닫기"
+            >
+              <X size={20} aria-hidden="true" />
             </button>
           </div>
 
-          <div className="auth-switch">
-            {mode === 'login' ? (
-              <p>
-                계정이 없으신가요?{' '}
-                <button type="button" onClick={switchMode} className="link-btn">
-                  회원가입
-                </button>
-              </p>
-            ) : (
-              <p>
-                이미 계정이 있으신가요?{' '}
-                <button type="button" onClick={switchMode} className="link-btn">
-                  로그인
-                </button>
-              </p>
+          <form onSubmit={handleSubmit} className="auth-form">
+            <div className="form-group">
+              <label htmlFor="auth-username">
+                <User size={16} aria-hidden="true" />
+                사용자명
+              </label>
+              <input
+                id="auth-username"
+                type="text"
+                value={formData.username}
+                onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+                placeholder="사용자명을 입력하세요"
+                ref={firstInputRef}
+                autoFocus
+                required
+              />
+            </div>
+
+            {mode === 'register' && (
+              <div className="form-group">
+                <label htmlFor="auth-email">
+                  <Mail size={16} aria-hidden="true" />
+                  이메일
+                </label>
+                <input
+                  id="auth-email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="이메일을 입력하세요"
+                  required
+                />
+              </div>
             )}
-          </div>
-        </form>
+
+            <div className="form-group">
+              <label htmlFor="auth-password">
+                <Lock size={16} aria-hidden="true" />
+                비밀번호
+              </label>
+              <input
+                id="auth-password"
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                placeholder="비밀번호를 입력하세요"
+                required
+              />
+            </div>
+
+            {mode === 'register' && (
+              <div className="form-group">
+                <label htmlFor="auth-confirm-password">
+                  <Lock size={16} aria-hidden="true" />
+                  비밀번호 확인
+                </label>
+                <input
+                  id="auth-confirm-password"
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  placeholder="비밀번호를 다시 입력하세요"
+                  required
+                />
+              </div>
+            )}
+
+            {error && (
+              <div className="error-message" role="alert" aria-live="polite">
+                {error}
+              </div>
+            )}
+
+            <div className="auth-actions">
+              <button type="submit" className="btn-primary">
+                {mode === 'login' ? '로그인' : '회원가입'}
+              </button>
+            </div>
+
+            <div className="auth-switch">
+              {mode === 'login' ? (
+                <p>
+                  계정이 없으신가요?{' '}
+                  <button type="button" onClick={switchMode} className="link-btn">
+                    회원가입
+                  </button>
+                </p>
+              ) : (
+                <p>
+                  이미 계정이 있으신가요?{' '}
+                  <button type="button" onClick={switchMode} className="link-btn">
+                    로그인
+                  </button>
+                </p>
+              )}
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </FocusLock>
   )
 }
 
