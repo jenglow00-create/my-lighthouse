@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import FocusLock from 'react-focus-lock'
-import { X, User, Mail, Lock, LogIn, UserPlus } from 'lucide-react'
+import { X, User, Mail, Lock, LogIn, UserPlus, AlertCircle } from 'lucide-react'
 
 function AuthModal({ isOpen, onClose, onAuth }) {
   const [mode, setMode] = useState('login') // 'login' or 'register'
@@ -229,7 +229,8 @@ function AuthModal({ isOpen, onClose, onAuth }) {
 
             {error && (
               <div className="error-message" role="alert" aria-live="polite">
-                {error}
+                <AlertCircle size={20} className="message-icon" aria-hidden="true" />
+                <span>{error}</span>
               </div>
             )}
 
