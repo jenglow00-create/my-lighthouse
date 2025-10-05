@@ -37,13 +37,17 @@ export interface UserSettings {
 
 /** 사용자 데이터 (전체) */
 export interface UserData {
-  currentUser: AuthUser | null
+  currentUser?: AuthUser | null
   personalInfo?: UserProfile
   settings?: UserSettings
   subjects: { [subjectId: string]: import('./study').Subject }
   sessions: import('./study').StudySession[]
-  reflections: import('./reflection').Reflection[]
+  reflections?: import('./reflection').Reflection[]
   goals?: Goal[]
+  globalSettings?: {
+    progressUnit: 'daily' | 'weekly' | 'monthly'
+    defaultTargetHours: number
+  }
 }
 
 /** 목표 */
