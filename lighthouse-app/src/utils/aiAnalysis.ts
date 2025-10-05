@@ -1,5 +1,16 @@
-// AI 분석 및 피드백 시스템
+// AI 분석 및 피드백 시스템 (규칙 기반)
 import type { StudySession } from '@/types'
+import {
+  WEEKLY_HOURS_BENCHMARK,
+  CONCENTRATION_BENCHMARK,
+  UNDERSTANDING_BENCHMARK,
+  FATIGUE_BENCHMARK,
+  DAILY_SESSIONS_BENCHMARK,
+  DAILY_HOURS_BENCHMARK,
+  findBenchmarkLevel,
+  getPercentileMessage,
+  getOverallAssessment
+} from '@/constants/benchmarks'
 
 /** 사용자 학습 패턴 분석 결과 */
 interface UserPattern {
@@ -8,6 +19,8 @@ interface UserPattern {
   avgFatigue: number
   studyTypeDistribution: Record<string, number>
   weeklyHours: number
+  dailyHours: number
+  dailySessions: number
   scoreProgress: number
   totalSessions: number
   occupation: string
@@ -28,31 +41,6 @@ interface AIUserProfile {
   dailyStudyHours?: number
   [key: string]: any  // 기타 필드 허용
 }
-
-// 주간 학습 시간 벤치마크
-const WEEKLY_HOURS_BENCHMARK = [
-  { max: 5, percentile: 20, message: '학습 시간 부족' },
-  { max: 10, percentile: 40, message: '평균 수준' },
-  { max: 15, percentile: 70, message: '평균 이상' },
-  { max: 20, percentile: 90, message: '상위 10%' },
-  { max: Infinity, percentile: 95, message: '상위 5%' }
-] as const
-
-// 집중도 벤치마크
-const CONCENTRATION_BENCHMARK = [
-  { max: 2.0, percentile: 30, message: '집중력 개선 필요' },
-  { max: 3.0, percentile: 50, message: '평균 집중력' },
-  { max: 4.0, percentile: 75, message: '높은 집중력' },
-  { max: Infinity, percentile: 90, message: '상위 10%' }
-] as const
-
-// 이해도 벤치마크
-const UNDERSTANDING_BENCHMARK = [
-  { max: 2.0, percentile: 25, message: '기초 복습 필요' },
-  { max: 3.0, percentile: 50, message: '평균 이해도' },
-  { max: 4.0, percentile: 75, message: '높은 이해도' },
-  { max: Infinity, percentile: 90, message: '상위 10%' }
-] as const
 
 /** 즉시 피드백 생성 */
 export function generateInstantFeedback(
@@ -105,6 +93,8 @@ function analyzeUserPattern(
   }, {})
 
   const weeklyHours = calculateWeeklyHours(recentSessions)
+  const dailyHours = calculateDailyHours(recentSessions)
+  const dailySessions = calculateDailySessions(recentSessions)
   const scoreProgress = analyzeScoreProgress(recentSessions)
 
   return {
@@ -113,6 +103,8 @@ function analyzeUserPattern(
     avgFatigue,
     studyTypeDistribution,
     weeklyHours,
+    dailyHours,
+    dailySessions,
     scoreProgress,
     totalSessions: recentSessions.length,
     occupation: userProfile?.occupation || 'student',
@@ -120,64 +112,101 @@ function analyzeUserPattern(
   }
 }
 
-/** 비교 메시지 생성 (규칙 기반) */
+/** 비교 메시지 생성 (벤치마크 기반) */
 function generateComparison(userPattern: UserPattern): string {
-  const comparisons: Array<{ condition: boolean; message: string }> = []
+  const comparisons: string[] = []
 
   // 주간 학습 시간 벤치마크
-  if (userPattern.weeklyHours >= userPattern.dailyTargetHours * 5) {
-    const benchmark = WEEKLY_HOURS_BENCHMARK.find(b => userPattern.weeklyHours <= b.max)!
-    comparisons.push({
-      condition: true,
-      message: `같은 학습량의 사용자 중 ${benchmark.message} (상위 ${100 - benchmark.percentile}%)`
-    })
+  if (userPattern.weeklyHours > 0) {
+    const level = findBenchmarkLevel(WEEKLY_HOURS_BENCHMARK, userPattern.weeklyHours)
+    comparisons.push(
+      `주간 학습량 ${userPattern.weeklyHours.toFixed(1)}시간 - ${getPercentileMessage(level.percentile)}`
+    )
   }
 
   // 집중도 벤치마크
-  const concentrationBenchmark = CONCENTRATION_BENCHMARK.find(b => userPattern.avgConcentration <= b.max)!
-  if (userPattern.avgConcentration >= 4) {
-    comparisons.push({
-      condition: true,
-      message: `집중력이 ${concentrationBenchmark.message} (상위 ${100 - concentrationBenchmark.percentile}%)`
-    })
+  if (userPattern.avgConcentration > 0) {
+    const level = findBenchmarkLevel(CONCENTRATION_BENCHMARK, userPattern.avgConcentration)
+    if (level.percentile >= 70) {
+      comparisons.push(
+        `집중도 ${userPattern.avgConcentration.toFixed(1)}점 - ${getPercentileMessage(level.percentile)}`
+      )
+    }
   }
 
   // 이해도 벤치마크
-  const understandingBenchmark = UNDERSTANDING_BENCHMARK.find(b => userPattern.avgUnderstanding <= b.max)!
-  if (userPattern.avgUnderstanding >= 4) {
-    comparisons.push({
-      condition: true,
-      message: `이해도가 ${understandingBenchmark.message} (상위 ${100 - understandingBenchmark.percentile}%)`
-    })
+  if (userPattern.avgUnderstanding > 0) {
+    const level = findBenchmarkLevel(UNDERSTANDING_BENCHMARK, userPattern.avgUnderstanding)
+    if (level.percentile >= 70) {
+      comparisons.push(
+        `이해도 ${userPattern.avgUnderstanding.toFixed(1)}점 - ${getPercentileMessage(level.percentile)}`
+      )
+    }
   }
 
-  // 꾸준함
-  if (userPattern.totalSessions >= 5) {
-    comparisons.push({
-      condition: true,
-      message: `꾸준함이 동일 목표 사용자 중 상위 20%에 속합니다`
-    })
+  // 일일 세션 수
+  if (userPattern.dailySessions >= 2) {
+    const level = findBenchmarkLevel(DAILY_SESSIONS_BENCHMARK, userPattern.dailySessions)
+    if (level.percentile >= 50) {
+      comparisons.push(
+        `하루 ${userPattern.dailySessions}회 학습 - 분산학습 ${level.label}`
+      )
+    }
   }
 
-  // 점수 향상
-  if (userPattern.scoreProgress > 0) {
-    comparisons.push({
-      condition: true,
-      message: `점수 향상도가 같은 목표의 사용자 중 상위 25%입니다`
-    })
+  if (comparisons.length > 0) {
+    return comparisons[Math.floor(Math.random() * comparisons.length)]
   }
 
-  const validComparisons = comparisons.filter(c => c.condition)
-  if (validComparisons.length > 0) {
-    return validComparisons[Math.floor(Math.random() * validComparisons.length)].message
-  }
-
-  return `같은 목표의 사용자 중 평균 수준입니다`
+  // 종합 평가 반환
+  return getOverallAssessment({
+    weeklyHours: userPattern.weeklyHours,
+    avgConcentration: userPattern.avgConcentration,
+    avgUnderstanding: userPattern.avgUnderstanding,
+    avgFatigue: userPattern.avgFatigue,
+    dailySessions: userPattern.dailySessions
+  })
 }
 
-/** 추천 메시지 생성 */
+/** 추천 메시지 생성 (벤치마크 기반) */
 function generateRecommendation(userPattern: UserPattern, _sessionData: Partial<StudySession>): string {
   const recommendations: string[] = []
+
+  // 집중도 기반 추천
+  const concentrationLevel = findBenchmarkLevel(CONCENTRATION_BENCHMARK, userPattern.avgConcentration)
+  if (concentrationLevel.percentile < 50) {
+    recommendations.push('추천: 포모도로 기법(25분 집중 + 5분 휴식)을 시도해보세요')
+  } else if (concentrationLevel.percentile >= 80) {
+    recommendations.push('추천: 현재 높은 집중력을 활용해 어려운 문제에 도전해보세요')
+  }
+
+  // 이해도 기반 추천
+  const understandingLevel = findBenchmarkLevel(UNDERSTANDING_BENCHMARK, userPattern.avgUnderstanding)
+  if (understandingLevel.percentile < 40) {
+    recommendations.push('추천: 기초 개념 복습 시간을 늘려보세요')
+  } else if (understandingLevel.percentile >= 80) {
+    recommendations.push('추천: 심화 문제나 응용 학습으로 확장해보세요')
+  }
+
+  // 피로도 기반 추천
+  const fatigueLevel = findBenchmarkLevel(FATIGUE_BENCHMARK, userPattern.avgFatigue)
+  if (fatigueLevel.percentile <= 30) { // 피로도가 높음 (낮은 백분위)
+    recommendations.push('추천: 학습량을 20% 줄이고 충분한 휴식을 취하세요')
+  } else if (fatigueLevel.percentile >= 80) {
+    recommendations.push('추천: 컨디션이 좋습니다. 집중이 필요한 학습을 배치하세요')
+  }
+
+  // 학습 시간 기반 추천
+  const weeklyLevel = findBenchmarkLevel(WEEKLY_HOURS_BENCHMARK, userPattern.weeklyHours)
+  if (weeklyLevel.percentile < 40) {
+    recommendations.push('추천: 주간 학습 시간을 점진적으로 늘려보세요')
+  }
+
+  // 세션 분산 추천
+  const sessionLevel = findBenchmarkLevel(DAILY_SESSIONS_BENCHMARK, userPattern.dailySessions)
+  if (sessionLevel.percentile < 50) {
+    recommendations.push('추천: 학습을 2-3회로 나누면 기억 정착에 효과적입니다')
+  }
 
   // 학습 유형 균형 체크
   const { studyTypeDistribution } = userPattern
@@ -187,74 +216,71 @@ function generateRecommendation(userPattern: UserPattern, _sessionData: Partial<
 
   if (totalStudyTypes === 1 && mostUsedType) {
     const typeNames: Record<string, string> = {
-      concept: '문제풀이',
-      practice: '개념학습',
-      memorize: '복습',
-      review: '암기'
+      concept: '문제풀이나 실전 연습',
+      practice: '개념 이해 학습',
+      memorize: '이해 중심 학습',
+      review: '새로운 내용 학습'
     }
-    recommendations.push(`추천: 내일은 ${typeNames[mostUsedType]} 비중을 늘려보세요`)
-  }
-
-  // 집중도 기반 추천
-  if (userPattern.avgConcentration < 3) {
-    recommendations.push('추천: 15분 단위로 학습을 나누어보세요')
-  } else if (userPattern.avgConcentration >= 4) {
-    recommendations.push('추천: 현재 집중력을 활용해 어려운 부분에 도전해보세요')
-  }
-
-  // 피로도 기반 추천
-  if (userPattern.avgFatigue >= 4) {
-    recommendations.push('추천: 내일은 학습량을 20% 줄이고 복습 위주로 진행하세요')
-  }
-
-  // 점수 추이 기반 추천
-  if (userPattern.scoreProgress < 0) {
-    recommendations.push('추천: 기초 개념 복습을 늘려보세요')
-  } else if (userPattern.scoreProgress > 0) {
-    recommendations.push('추천: 실전 문제풀이 비중을 늘려보세요')
+    recommendations.push(`추천: 학습 균형을 위해 ${typeNames[mostUsedType]}도 병행하세요`)
   }
 
   // 시간대별 추천
   const hour = new Date().getHours()
-  if (hour >= 22 || hour <= 6) {
-    recommendations.push('추천: 밤 늦은 학습보다는 내일 아침 일찍 시작해보세요')
-  } else if (hour >= 6 && hour <= 10) {
-    recommendations.push('추천: 아침 시간을 활용한 개념 학습이 효과적입니다')
+  if (hour >= 22 || hour <= 5) {
+    recommendations.push('추천: 늦은 밤 학습보다 내일 아침 일찍 시작하는 것이 효율적입니다')
+  } else if (hour >= 6 && hour <= 9) {
+    recommendations.push('추천: 아침 시간을 활용한 개념 학습이 기억력 향상에 좋습니다')
   }
 
   return recommendations.length > 0
     ? recommendations[Math.floor(Math.random() * recommendations.length)]
-    : '추천: 꾸준한 학습 패턴을 유지하세요'
+    : '추천: 현재 학습 패턴을 꾸준히 유지하세요'
 }
 
 /** 동기부여 메시지 생성 */
 function generateMotivationalMessage(userPattern: UserPattern): string {
   const messages: string[] = []
 
-  if (userPattern.totalSessions >= 10) {
-    messages.push('🔥 훌륭한 학습 습관이 형성되고 있습니다!')
+  // 학습량 기반 동기부여
+  const weeklyLevel = findBenchmarkLevel(WEEKLY_HOURS_BENCHMARK, userPattern.weeklyHours)
+  if (weeklyLevel.percentile >= 70) {
+    messages.push('🔥 훌륭한 학습량을 유지하고 있습니다!')
   }
 
-  if (userPattern.avgConcentration >= 4) {
+  // 집중도 기반 동기부여
+  const concentrationLevel = findBenchmarkLevel(CONCENTRATION_BENCHMARK, userPattern.avgConcentration)
+  if (concentrationLevel.percentile >= 70) {
     messages.push('⭐ 뛰어난 집중력을 보여주고 있습니다!')
   }
 
-  if (userPattern.avgUnderstanding >= 4) {
+  // 이해도 기반 동기부여
+  const understandingLevel = findBenchmarkLevel(UNDERSTANDING_BENCHMARK, userPattern.avgUnderstanding)
+  if (understandingLevel.percentile >= 70) {
     messages.push('🧠 이해도가 점점 높아지고 있습니다!')
   }
 
+  // 세션 수 기반 동기부여
+  if (userPattern.totalSessions >= 10) {
+    messages.push('💪 훌륭한 학습 습관이 형성되고 있습니다!')
+  }
+
+  // 점수 향상
   if (userPattern.scoreProgress > 0) {
     messages.push('📈 점수가 꾸준히 상승하고 있습니다!')
   }
 
-  if (userPattern.weeklyHours >= userPattern.dailyTargetHours * 5) {
-    messages.push('💪 목표 학습량을 잘 달성하고 있습니다!')
+  // 피로도 관리
+  const fatigueLevel = findBenchmarkLevel(FATIGUE_BENCHMARK, userPattern.avgFatigue)
+  if (fatigueLevel.percentile >= 80) { // 피로도가 낮음 (높은 백분위)
+    messages.push('💚 건강한 학습 습관을 유지하고 있습니다!')
   }
 
+  // 기본 동기부여 메시지
   const defaultMessages = [
     '✨ 매일 조금씩 발전하고 있습니다!',
     '🎯 목표를 향해 착실히 나아가고 있습니다!',
-    '🌟 꾸준함이 큰 성과를 만들어냅니다!'
+    '🌟 꾸준함이 큰 성과를 만들어냅니다!',
+    '🚀 한 걸음씩 목표에 다가가고 있습니다!'
   ]
 
   return messages.length > 0
@@ -266,18 +292,31 @@ function generateMotivationalMessage(userPattern: UserPattern): string {
 function generateWarningMessage(userPattern: UserPattern, sessionData: Partial<StudySession>): string | null {
   const warnings: string[] = []
 
-  if (userPattern.avgFatigue >= 4.5) {
-    warnings.push('⚠️ 피로도가 높습니다. 휴식을 고려해보세요')
+  // 피로도 경고
+  const fatigueLevel = findBenchmarkLevel(FATIGUE_BENCHMARK, userPattern.avgFatigue)
+  if (fatigueLevel.percentile <= 15) { // 매우 높은 피로도
+    warnings.push(`⚠️ ${fatigueLevel.message}`)
   }
 
-  if (userPattern.avgConcentration <= 2) {
-    warnings.push('⚠️ 집중력이 떨어지고 있습니다. 학습 환경을 점검해보세요')
+  // 집중도 경고
+  const concentrationLevel = findBenchmarkLevel(CONCENTRATION_BENCHMARK, userPattern.avgConcentration)
+  if (concentrationLevel.percentile <= 30) {
+    warnings.push(`⚠️ ${concentrationLevel.message}`)
   }
 
-  if (userPattern.weeklyHours < userPattern.dailyTargetHours * 2) {
-    warnings.push('⚠️ 목표 학습량에 비해 부족합니다')
+  // 이해도 경고
+  const understandingLevel = findBenchmarkLevel(UNDERSTANDING_BENCHMARK, userPattern.avgUnderstanding)
+  if (understandingLevel.percentile <= 30) {
+    warnings.push(`⚠️ ${understandingLevel.message}`)
   }
 
+  // 학습량 경고
+  const weeklyLevel = findBenchmarkLevel(WEEKLY_HOURS_BENCHMARK, userPattern.weeklyHours)
+  if (weeklyLevel.percentile <= 20) {
+    warnings.push(`⚠️ ${weeklyLevel.message}`)
+  }
+
+  // 현재 세션 상태 경고
   if ((sessionData.concentration ?? 3) <= 2 && (sessionData.understanding ?? 3) <= 2) {
     warnings.push('⚠️ 오늘은 컨디션이 좋지 않은 것 같습니다. 가벼운 복습을 추천합니다')
   }
@@ -293,6 +332,24 @@ function calculateWeeklyHours(sessions: StudySession[]): number {
   return sessions
     .filter(session => new Date(session.date) >= oneWeekAgo)
     .reduce((total, session) => total + (session.duration || 0), 0)
+}
+
+/** 일일 평균 학습 시간 계산 */
+function calculateDailyHours(sessions: StudySession[]): number {
+  if (sessions.length === 0) return 0
+
+  const uniqueDates = new Set(sessions.map(s => s.date))
+  const totalHours = sessions.reduce((sum, s) => sum + (s.duration || 0), 0)
+
+  return totalHours / uniqueDates.size
+}
+
+/** 일일 평균 세션 수 계산 */
+function calculateDailySessions(sessions: StudySession[]): number {
+  if (sessions.length === 0) return 0
+
+  const uniqueDates = new Set(sessions.map(s => s.date))
+  return sessions.length / uniqueDates.size
 }
 
 /** 점수 향상 분석 */
@@ -312,29 +369,32 @@ export function generateRealTimeFeedback(
   switch (fieldName) {
     case 'concentration':
       if (typeof value === 'number') {
-        if (value >= 4) {
+        const level = findBenchmarkLevel(CONCENTRATION_BENCHMARK, value)
+        if (level.percentile >= 80) {
           feedback.push('🔥 훌륭한 집중력입니다!')
-        } else if (value <= 2) {
-          feedback.push('💡 내일은 환경을 바꿔보세요')
+        } else if (level.percentile <= 30) {
+          feedback.push('💡 환경을 바꿔보거나 휴식 후 재시도하세요')
         }
       }
       break
 
     case 'understanding':
       if (typeof value === 'number') {
-        if (value >= 4) {
-          feedback.push('🧠 이해도가 높네요!')
-        } else if (value <= 2) {
-          feedback.push('📚 기초 복습을 추천합니다')
+        const level = findBenchmarkLevel(UNDERSTANDING_BENCHMARK, value)
+        if (level.percentile >= 80) {
+          feedback.push('🧠 내용을 잘 이해하고 있습니다!')
+        } else if (level.percentile <= 30) {
+          feedback.push('📚 기초 개념 복습을 추천합니다')
         }
       }
       break
 
     case 'fatigue':
       if (typeof value === 'number') {
-        if (value >= 4) {
+        const level = findBenchmarkLevel(FATIGUE_BENCHMARK, value)
+        if (level.percentile <= 15) { // 높은 피로도
           feedback.push('😴 충분한 휴식이 필요해보입니다')
-        } else if (value <= 2) {
+        } else if (level.percentile >= 80) { // 낮은 피로도
           feedback.push('💪 컨디션이 좋네요!')
         }
       }
@@ -342,10 +402,11 @@ export function generateRealTimeFeedback(
 
     case 'duration':
       if (typeof value === 'number') {
+        const level = findBenchmarkLevel(DAILY_HOURS_BENCHMARK, value)
         if (value >= 3) {
           feedback.push('⏰ 장시간 학습! 중간 휴식을 잊지 마세요')
-        } else if (value <= 0.5) {
-          feedback.push('🕐 짧은 시간도 의미있습니다')
+        } else if (level.percentile >= 50) {
+          feedback.push('✅ 적절한 학습 시간입니다')
         }
       }
       break
