@@ -97,56 +97,67 @@ function Goals({ studyData }) {
   const daysLeft = currentSubject ? calculateDaysUntilExam(currentSubject.examDate) : null
 
   return (
-    <div className="goals">
-      <div className="page-header">
-        <h1>목표 관리</h1>
+    <main className="goals" aria-labelledby="goals-title">
+      <header className="page-header">
+        <h1 id="goals-title">목표 관리</h1>
         <p>학습 목표를 설정하고 진행 상황을 확인하세요</p>
-      </div>
+      </header>
 
-      <div className="goals-content">
+      <section className="goals-content">
         {subjectsList.length === 0 ? (
           <div className="no-subjects-message">
             <h2>과목을 추가해주세요</h2>
             <p>학습 여정을 시작하려면 먼저 과목을 추가해야 합니다.</p>
-            <button className="btn-primary" onClick={() => navigate('/settings')}>
-              <Settings size={20} />
+            <button
+              className="btn-primary"
+              onClick={() => navigate('/settings')}
+              aria-label="설정으로 이동하여 과목 추가하기"
+            >
+              <Settings size={20} aria-hidden="true" />
               과목 추가하기
             </button>
           </div>
         ) : (
           <>
-            <div className="subject-selection">
-              <div className="subject-tabs">
+            <nav className="subject-selection" aria-label="과목 선택">
+              <div className="subject-tabs" role="tablist">
                 {subjectsList.map(([subjectId, subject]) => {
                   const subjectProgress = Math.min((subject.totalHours / subject.targetHours) * 100, 100)
                   const isActive = selectedSubjectId === subjectId
+                  const days = calculateDaysUntilExam(subject.examDate)
+                  let daysText = ''
+                  if (days !== null) {
+                    if (days > 0) daysText = `D-${days}`
+                    else if (days === 0) daysText = 'D-Day!'
+                    else daysText = '시험종료'
+                  }
+
                   return (
                     <button
                       key={subjectId}
+                      id={`subject-tab-${subjectId}`}
+                      role="tab"
+                      aria-selected={isActive}
+                      aria-controls={`subject-panel-${subjectId}`}
                       className={`subject-tab ${isActive ? 'active' : ''}`}
                       onClick={() => setSelectedSubjectId(subjectId)}
+                      aria-label={`${subject.name}, 진행률 ${Math.round(subjectProgress)}%, ${subject.examType}${daysText ? ', ' + daysText : ''}`}
                     >
                       <div className="tab-header">
                         <span className="tab-name">{subject.name}</span>
-                        <span className="tab-progress">{Math.round(subjectProgress)}%</span>
+                        <span className="tab-progress" aria-hidden="true">{Math.round(subjectProgress)}%</span>
                       </div>
-                      <div className="tab-progress-bar">
+                      <div className="tab-progress-bar" role="progressbar" aria-valuenow={Math.round(subjectProgress)} aria-valuemin="0" aria-valuemax="100">
                         <div
                           className="tab-progress-fill"
                           style={{ width: `${subjectProgress}%` }}
                         ></div>
                       </div>
                       <div className="tab-details">
-                        <span className="exam-type">{subject.examType}</span>
-                        {subject.examDate && (
-                          <span className="days-remaining">
-                            {(() => {
-                              const days = calculateDaysUntilExam(subject.examDate)
-                              if (days === null) return ''
-                              if (days > 0) return `D-${days}`
-                              if (days === 0) return 'D-Day!'
-                              return '시험종료'
-                            })()}
+                        <span className="exam-type" aria-hidden="true">{subject.examType}</span>
+                        {subject.examDate && daysText && (
+                          <span className="days-remaining" aria-hidden="true">
+                            {daysText}
                           </span>
                         )}
                       </div>
@@ -154,25 +165,25 @@ function Goals({ studyData }) {
                   )
                 })}
               </div>
-            </div>
+            </nav>
 
-            <div className="current-subject-info">
+            <section className="current-subject-info" id={`subject-panel-${selectedSubjectId}`} role="tabpanel" aria-labelledby={`subject-tab-${selectedSubjectId}`}>
               <h2>{currentSubject?.name}</h2>
               <div className="subject-meta">
                 <span className="exam-type-large">{currentSubject?.examType}</span>
                 {daysLeft !== null && (
-                  <span className={`days-left-large ${daysLeft <= 7 ? 'urgent' : daysLeft <= 30 ? 'warning' : 'normal'}`}>
-                    {daysLeft > 0 ? `D-${daysLeft}` : daysLeft === 0 ? 'D-Day!' : '시험 종료'}
+                  <span className={`days-left-large ${daysLeft <= 7 ? 'urgent' : daysLeft <= 30 ? 'warning' : 'normal'}`} aria-label={`시험까지 ${daysLeft > 0 ? `${daysLeft}일 남음` : daysLeft === 0 ? '오늘 시험' : '시험 종료'}`}>
+                    <span aria-hidden="true">{daysLeft > 0 ? `D-${daysLeft}` : daysLeft === 0 ? 'D-Day!' : '시험 종료'}</span>
                   </span>
                 )}
               </div>
               {currentSubject?.description && (
                 <p className="subject-description">{currentSubject.description}</p>
               )}
-            </div>
+            </section>
 
             <div className="progress-controls">
-              <div className="unit-selector">
+              <div className="unit-selector" role="group" aria-label="진행률 조회 기간 선택">
                 {[
                   { key: 'daily', label: '일간' },
                   { key: 'weekly', label: '주간' },
@@ -183,6 +194,8 @@ function Goals({ studyData }) {
                     key={key}
                     className={`unit-btn ${progressUnit === key ? 'active' : ''}`}
                     onClick={() => setProgressUnit(key)}
+                    aria-pressed={progressUnit === key}
+                    aria-label={`${label} 진행률 보기`}
                   >
                     {label}
                   </button>
@@ -191,12 +204,12 @@ function Goals({ studyData }) {
             </div>
 
             <div className="progress-dashboard">
-              <div className="progress-section main-progress">
+              <section className="progress-section main-progress" aria-labelledby="main-progress-title">
                 <div className="section-header">
-                  <h3>등대까지의 여정</h3>
-                  <span className="progress-percentage">{Math.round(progress)}%</span>
+                  <h3 id="main-progress-title">등대까지의 여정</h3>
+                  <span className="progress-percentage" aria-hidden="true">{Math.round(progress)}%</span>
                 </div>
-                <div className="large-progress-bar">
+                <div className="large-progress-bar" role="progressbar" aria-valuenow={Math.round(progress)} aria-valuemin="0" aria-valuemax="100" aria-label={`전체 학습 진행률 ${Math.round(progress)}%`}>
                   <div
                     className="large-progress-fill"
                     style={{ width: `${progress}%` }}
@@ -206,14 +219,14 @@ function Goals({ studyData }) {
                   <span>학습시간: {currentSubject?.totalHours || 0} / {currentSubject?.targetHours || 0}시간</span>
                   <span>남은 시간: {Math.max(0, (currentSubject?.targetHours || 0) - (currentSubject?.totalHours || 0))}시간</span>
                 </div>
-              </div>
+              </section>
 
-              <div className="progress-section period-progress">
+              <section className="progress-section period-progress" aria-labelledby="period-progress-title">
                 <div className="section-header">
-                  <h3>{progressData.label} 목표</h3>
-                  <span className="progress-percentage">{Math.round(progressData.percentage)}%</span>
+                  <h3 id="period-progress-title">{progressData.label} 목표</h3>
+                  <span className="progress-percentage" aria-hidden="true">{Math.round(progressData.percentage)}%</span>
                 </div>
-                <div className="medium-progress-bar">
+                <div className="medium-progress-bar" role="progressbar" aria-valuenow={Math.round(progressData.percentage)} aria-valuemin="0" aria-valuemax="100" aria-label={`${progressData.label} 진행률 ${Math.round(progressData.percentage)}%`}>
                   <div
                     className="medium-progress-fill"
                     style={{ width: `${progressData.percentage}%` }}
@@ -223,12 +236,12 @@ function Goals({ studyData }) {
                   <span>현재: {progressData.current.toFixed(1)}시간</span>
                   <span>목표: {progressData.target.toFixed(1)}시간</span>
                 </div>
-              </div>
+              </section>
             </div>
 
             {daysLeft > 0 && (
-              <div className="daily-targets">
-                <h3>남은 기간 대비 목표</h3>
+              <section className="daily-targets" aria-labelledby="daily-targets-title">
+                <h3 id="daily-targets-title">남은 기간 대비 목표</h3>
                 <div className="targets-grid">
                   <div className="target-card">
                     <div className="target-label">일일 목표</div>
@@ -254,11 +267,12 @@ function Goals({ studyData }) {
                     <div className="target-note">시험까지 남은 시간</div>
                   </div>
                 </div>
-              </div>
+              </section>
             )}
 
-            <div className="motivation-section">
-              <div className="motivation-card">
+            <section className="motivation-section" aria-labelledby="motivation-title">
+              <h3 id="motivation-title" className="sr-only">학습 동기부여</h3>
+              <div className="motivation-card" role="status" aria-live="polite">
                 {progress < 25 && (
                   <>
                     <div className="motivation-icon">🌱</div>
@@ -296,11 +310,11 @@ function Goals({ studyData }) {
                   </>
                 )}
               </div>
-            </div>
+            </section>
           </>
         )}
-      </div>
-    </div>
+      </section>
+    </main>
   )
 }
 
