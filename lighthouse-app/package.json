@@ -9,7 +9,11 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "notion": "node ../update-notion-dual.js",
-    "dev:notion": "node ../update-notion-dual.js && vite"
+    "dev:notion": "node ../update-notion-dual.js && vite",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest --watch"
   },
   "dependencies": {
     "dexie": "^4.2.0",
