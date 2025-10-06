@@ -430,9 +430,7 @@ export function generateInstantFeedback(
   return {
     comparison: `${weeklyAnalysis.feedback.label} - ${getPercentileMessage(weeklyAnalysis.feedback.percentile)}`,
     recommendation:
-      weeklyAnalysis.feedback.recommendations[
-        Math.floor(Math.random() * weeklyAnalysis.feedback.recommendations.length)
-      ] || null,
+      weeklyAnalysis.feedback.recommendations[0] || null,
     motivationalMessage: generateMotivationalMessage(weeklyAnalysis),
     warningMessage: generateWarningMessage(weeklyAnalysis, sessionData)
   }
@@ -464,16 +462,10 @@ function generateMotivationalMessage(analysis: WeeklyAnalysis): string {
     messages.push('💚 건강한 학습 습관을 유지하고 있습니다!')
   }
 
-  const defaultMessages = [
-    '✨ 매일 조금씩 발전하고 있습니다!',
-    '🎯 목표를 향해 착실히 나아가고 있습니다!',
-    '🌟 꾸준함이 큰 성과를 만들어냅니다!',
-    '🚀 한 걸음씩 목표에 다가가고 있습니다!'
-  ]
+  const defaultMessage = '✨ 꾸준한 학습을 계속 이어가세요!'
 
-  return messages.length > 0
-    ? messages[Math.floor(Math.random() * messages.length)]
-    : defaultMessages[Math.floor(Math.random() * defaultMessages.length)]
+  // 우선순위가 높은 메시지부터 반환 (결정론적)
+  return messages.length > 0 ? messages[0] : defaultMessage
 }
 
 /**
