@@ -176,47 +176,51 @@ function Metacognition({ studyData, setStudyData }: MetacognitionProps) {
   }
 
   return (
-    <div className="metacognition">
-      <div className="page-header">
-        <h1>
-          <Brain size={24} />
+    <main className="metacognition" aria-labelledby="metacognition-title">
+      <header className="page-header">
+        <h1 id="metacognition-title">
+          <Brain size={24} aria-hidden="true" />
           자기성찰
         </h1>
         <p>
           {isAutoTriggered ? '학습 완료! 성찰을 진행해보세요' : '자기주도 복습과 검증을 통한 성찰'}
         </p>
-      </div>
+      </header>
 
-      <div className="reflection-workflow">
-        <div className="workflow-progress">
-          <div className={`step ${currentStep === 'topics' ? 'active' : currentStep !== 'topics' ? 'completed' : ''}`}>1. 주제들</div>
-          <div className={`step ${currentStep === 'selected' ? 'active' : ['recall', 'verify', 'evaluate', 'plan'].includes(currentStep) ? 'completed' : ''}`}>2. 선택</div>
-          <div className={`step ${currentStep === 'recall' ? 'active' : ['verify', 'evaluate', 'plan'].includes(currentStep) ? 'completed' : ''}`}>3. 회상</div>
-          <div className={`step ${currentStep === 'verify' ? 'active' : ['evaluate', 'plan'].includes(currentStep) ? 'completed' : ''}`}>4. 검증</div>
-          <div className={`step ${currentStep === 'evaluate' ? 'active' : currentStep === 'plan' ? 'completed' : ''}`}>5. 평가</div>
-          <div className={`step ${currentStep === 'plan' ? 'active' : ''}`}>6. 계획</div>
-        </div>
+      <section className="reflection-workflow">
+        <nav className="workflow-progress" aria-label="성찰 진행 단계">
+          <div className={`step ${currentStep === 'topics' ? 'active' : currentStep !== 'topics' ? 'completed' : ''}`} aria-current={currentStep === 'topics' ? 'step' : undefined}>1. 주제들</div>
+          <div className={`step ${currentStep === 'selected' ? 'active' : ['recall', 'verify', 'evaluate', 'plan'].includes(currentStep) ? 'completed' : ''}`} aria-current={currentStep === 'selected' ? 'step' : undefined}>2. 선택</div>
+          <div className={`step ${currentStep === 'recall' ? 'active' : ['verify', 'evaluate', 'plan'].includes(currentStep) ? 'completed' : ''}`} aria-current={currentStep === 'recall' ? 'step' : undefined}>3. 회상</div>
+          <div className={`step ${currentStep === 'verify' ? 'active' : ['evaluate', 'plan'].includes(currentStep) ? 'completed' : ''}`} aria-current={currentStep === 'verify' ? 'step' : undefined}>4. 검증</div>
+          <div className={`step ${currentStep === 'evaluate' ? 'active' : currentStep === 'plan' ? 'completed' : ''}`} aria-current={currentStep === 'evaluate' ? 'step' : undefined}>5. 평가</div>
+          <div className={`step ${currentStep === 'plan' ? 'active' : ''}`} aria-current={currentStep === 'plan' ? 'step' : undefined}>6. 계획</div>
+        </nav>
 
         {currentStep === 'topics' && (
-          <div className="reflection-step">
-            <h3>📝 오늘 공부한 주제들 입력</h3>
+          <section className="reflection-step" aria-labelledby="topics-step-title">
+            <h3 id="topics-step-title">📝 오늘 공부한 주제들 입력</h3>
             <p>오늘 학습한 모든 주제들을 입력해주세요 (예: 회계 대손상각비, 수익, 리스)</p>
             <div className="topics-list">
               {studyTopics.map((topic, index) => (
                 <div key={index} className="topic-input-row">
+                  <label htmlFor={`topic-${index}`} className="sr-only">주제 {index + 1}</label>
                   <input
+                    id={`topic-${index}`}
                     type="text"
                     value={topic}
                     onChange={(e) => updateTopic(index, e.target.value)}
                     placeholder={`주제 ${index + 1}`}
                     className="topic-input"
+                    aria-label={`주제 ${index + 1}`}
                   />
                   {studyTopics.length > 1 && (
                     <button
                       className="btn-remove"
                       onClick={() => removeTopic(index)}
+                      aria-label={`주제 ${index + 1} 삭제`}
                     >
-                      <X size={16} />
+                      <X size={16} aria-hidden="true" />
                     </button>
                   )}
                 </div>
@@ -224,55 +228,59 @@ function Metacognition({ studyData, setStudyData }: MetacognitionProps) {
             </div>
             <div className="topic-actions">
               <button className="btn-secondary" onClick={addTopic}>
-                <Plus size={16} /> 주제 추가
+                <Plus size={16} aria-hidden="true" /> 주제 추가
               </button>
               <button
                 className="btn-primary"
                 onClick={handleTopicsNext}
                 disabled={studyTopics.filter(t => t.trim()).length === 0}
               >
-                다음 단계 <ArrowRight size={20} />
+                다음 단계 <ArrowRight size={20} aria-hidden="true" />
               </button>
             </div>
-          </div>
+          </section>
         )}
 
         {currentStep === 'selected' && (
-          <div className="reflection-step">
-            <h3>🎯 선택된 주제</h3>
+          <section className="reflection-step" aria-labelledby="selected-step-title">
+            <h3 id="selected-step-title">🎯 선택된 주제</h3>
             <p>다음 주제에 대해 성찰해보겠습니다:</p>
             <div className="selected-topic">
-              <div className="topic-display">{selectedTopic}</div>
+              <div className="topic-display" aria-label={`선택된 주제: ${selectedTopic}`}>{selectedTopic}</div>
               <button
                 className="btn-secondary regenerate-btn"
                 onClick={selectRandomTopic}
+                aria-label="다른 주제 무작위로 선택하기"
               >
-                <RotateCcw size={16} /> 다른 주제 선택
+                <RotateCcw size={16} aria-hidden="true" /> 다른 주제 선택
               </button>
             </div>
             <div className="step-actions">
               <button className="btn-secondary" onClick={() => setCurrentStep('topics')}>이전</button>
               <button className="btn-primary" onClick={handleSelectedNext}>
-                이 주제로 진행 <ArrowRight size={20} />
+                이 주제로 진행 <ArrowRight size={20} aria-hidden="true" />
               </button>
             </div>
-          </div>
+          </section>
         )}
 
         {currentStep === 'recall' && (
-          <div className="reflection-step">
-            <h3>🧠 학습 내용 회상</h3>
+          <section className="reflection-step" aria-labelledby="recall-step-title">
+            <h3 id="recall-step-title">🧠 학습 내용 회상</h3>
             <div className="current-topic">
               <strong>주제:</strong> {selectedTopic}
             </div>
             <p>이 주제에 대해 학습한 내용을 기억나는 대로 자세히 작성해보세요</p>
             <div className="form-group">
+              <label htmlFor="recall-content" className="sr-only">학습 내용 회상</label>
               <textarea
+                id="recall-content"
                 value={recallContent}
                 onChange={(e) => setRecallContent(e.target.value)}
                 placeholder="이 주제에 대해 배운 내용, 개념, 공식, 예시 등을 최대한 자세히 적어보세요..."
                 rows={8}
                 className="reflection-textarea"
+                aria-label="학습 내용 회상하여 작성"
               />
             </div>
             <div className="step-actions">
@@ -282,23 +290,24 @@ function Metacognition({ studyData, setStudyData }: MetacognitionProps) {
                 onClick={handleRecallNext}
                 disabled={!recallContent.trim()}
               >
-                회상 완료 <ArrowRight size={20} />
+                회상 완료 <ArrowRight size={20} aria-hidden="true" />
               </button>
             </div>
-          </div>
+          </section>
         )}
 
         {currentStep === 'verify' && (
-          <div className="reflection-step">
-            <h3>📚 교재로 검증하기</h3>
+          <section className="reflection-step" aria-labelledby="verify-step-title">
+            <h3 id="verify-step-title">📚 교재로 검증하기</h3>
             <p>교재나 자료를 직접 확인하여 위에서 작성한 내용이 정확한지 검증해보세요</p>
             <div className="recall-review">
               <strong>작성한 내용:</strong>
               <div className="recall-content-preview">{recallContent}</div>
             </div>
             <div className="form-group">
-              <label>교재 확인 결과</label>
+              <label htmlFor="verification-result">교재 확인 결과</label>
               <textarea
+                id="verification-result"
                 value={verificationResult}
                 onChange={(e) => setVerificationResult(e.target.value)}
                 placeholder="교재와 비교해서 틀린 부분, 빠진 부분, 추가로 알게 된 내용 등을 적어주세요..."
@@ -313,26 +322,28 @@ function Metacognition({ studyData, setStudyData }: MetacognitionProps) {
                 onClick={handleVerifyNext}
                 disabled={!verificationResult.trim()}
               >
-                검증 완료 <ArrowRight size={20} />
+                검증 완료 <ArrowRight size={20} aria-hidden="true" />
               </button>
             </div>
-          </div>
+          </section>
         )}
 
         {currentStep === 'evaluate' && (
-          <div className="reflection-step">
-            <h3>⭐ 학습도 자기 평가</h3>
+          <section className="reflection-step" aria-labelledby="evaluate-step-title">
+            <h3 id="evaluate-step-title">⭐ 학습도 자기 평가</h3>
             <p>이 주제에 대한 현재 나의 학습 정도를 평가해보세요</p>
-            <div className="selfcheck-options">
+            <div className="selfcheck-options" role="group" aria-label="학습도 평가 선택">
               {learningRatingOptions.map(({ value, label, color }) => (
                 <button
                   key={value}
                   className={`selfcheck-option ${learningRating === value ? 'selected' : ''}`}
                   onClick={() => setLearningRating(value as LearningRating)}
                   style={{ '--accent-color': color } as React.CSSProperties}
+                  aria-pressed={learningRating === value}
+                  aria-label={`${value}점: ${label}`}
                 >
-                  <span className="rating-number">{value}</span>
-                  <span className="rating-label">{label}</span>
+                  <span className="rating-number" aria-hidden="true">{value}</span>
+                  <span className="rating-label" aria-hidden="true">{label}</span>
                 </button>
               ))}
             </div>
@@ -342,9 +353,11 @@ function Metacognition({ studyData, setStudyData }: MetacognitionProps) {
                 <button
                   className="evidence-toggle"
                   onClick={() => setShowEvidence(!showEvidence)}
+                  aria-expanded={showEvidence}
+                  aria-controls="evidence-box"
                 >
                   📊 근거 보기
-                  {showEvidence ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  {showEvidence ? <ChevronUp size={16} aria-hidden="true" /> : <ChevronDown size={16} aria-hidden="true" />}
                 </button>
 
                 {showEvidence && (() => {
@@ -366,7 +379,7 @@ function Metacognition({ studyData, setStudyData }: MetacognitionProps) {
                   )
 
                   return (
-                    <div className="evidence-box">
+                    <div id="evidence-box" className="evidence-box" role="region" aria-label="평가 근거 상세 정보">
                       <div className="evidence-item">
                         <strong>📊 측정값:</strong> {learningRating}점 ({analysis.ranking})
                       </div>
@@ -397,20 +410,21 @@ function Metacognition({ studyData, setStudyData }: MetacognitionProps) {
                 onClick={handleEvaluateNext}
                 disabled={learningRating === null}
               >
-                평가 완료 <ArrowRight size={20} />
+                평가 완료 <ArrowRight size={20} aria-hidden="true" />
               </button>
             </div>
-          </div>
+          </section>
         )}
 
         {currentStep === 'plan' && (
-          <div className="reflection-step">
-            <h3>📋 학습 계획 수립</h3>
+          <section className="reflection-step" aria-labelledby="plan-step-title">
+            <h3 id="plan-step-title">📋 학습 계획 수립</h3>
             <p>앞으로의 학습 계획을 세워보세요</p>
 
             <div className="form-group">
-              <label>공부가 더 필요한 내용</label>
+              <label htmlFor="needs-more-study">공부가 더 필요한 내용</label>
               <textarea
+                id="needs-more-study"
                 value={needsMoreStudy}
                 onChange={(e) => setNeedsMoreStudy(e.target.value)}
                 placeholder="이 주제에서 더 깊이 공부해야 할 부분을 적어보세요..."
@@ -420,8 +434,9 @@ function Metacognition({ studyData, setStudyData }: MetacognitionProps) {
             </div>
 
             <div className="form-group">
-              <label>내일 공부할 내용</label>
+              <label htmlFor="tomorrow-plan">내일 공부할 내용</label>
               <textarea
+                id="tomorrow-plan"
                 value={tomorrowPlan}
                 onChange={(e) => setTomorrowPlan(e.target.value)}
                 placeholder="내일 공부할 구체적인 계획을 적어보세요..."
@@ -433,19 +448,19 @@ function Metacognition({ studyData, setStudyData }: MetacognitionProps) {
             <div className="step-actions">
               <button className="btn-secondary" onClick={() => setCurrentStep('evaluate')}>이전</button>
               <button className="btn-primary" onClick={handleFinalSubmit}>
-                성찰 완료 <CheckCircle size={20} />
+                성찰 완료 <CheckCircle size={20} aria-hidden="true" />
               </button>
             </div>
-          </div>
+          </section>
         )}
-      </div>
+      </section>
 
       {recentReflections.length > 0 && currentStep === 'topics' && (
-        <div className="recent-reflections">
+        <section className="recent-reflections" aria-labelledby="recent-reflections-title">
           <div className="section-header">
-            <h3>최근 성찰</h3>
+            <h3 id="recent-reflections-title">최근 성찰</h3>
             <button className="btn-secondary" onClick={() => navigate('/metacognition/history')}>
-              <FileText size={16} /> 전체 보기
+              <FileText size={16} aria-hidden="true" /> 전체 보기
             </button>
           </div>
           <div className="reflections-preview">
@@ -502,9 +517,9 @@ function Metacognition({ studyData, setStudyData }: MetacognitionProps) {
               )
             })}
           </div>
-        </div>
+        </section>
       )}
-    </div>
+    </main>
   )
 }
 
