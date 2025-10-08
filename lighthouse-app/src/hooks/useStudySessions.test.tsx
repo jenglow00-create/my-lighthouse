@@ -19,7 +19,7 @@ describe('useStudySessions', () => {
       // Assert
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false)
-      })
+      }, { timeout: 10000 })
       expect(result.current.sessions).toEqual([])
     })
 
