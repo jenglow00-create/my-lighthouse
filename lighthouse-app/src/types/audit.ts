@@ -1,45 +1,49 @@
-// 감사 로그 타입 정의
+// 감사 로그 관련 타입 정의
 
-/** 감사 로그 액션 타입 */
-export type AuditAction =
-  | 'create'
-  | 'update'
-  | 'delete'
-  | 'read'
+/**
+ * 감사 로그 액션
+ */
+export type AuditAction = 'CREATE' | 'UPDATE' | 'DELETE'
 
-/** 감사 로그 엔티티 타입 */
-export type AuditEntity =
-  | 'session'
-  | 'reflection'
-  | 'subject'
-  | 'user'
-  | 'goal'
+/**
+ * 감사 로그 엔티티
+ */
+export type AuditEntity = 'session' | 'subject' | 'reflection' | 'profile' | 'settings'
 
-/** 감사 로그 */
+/**
+ * 감사 로그
+ */
 export interface AuditLog {
-  id: string                    // UUID
-  timestamp: string             // ISO 8601
-  userId: string                // 사용자 ID (익명화된 ID)
-  entity: AuditEntity          // 엔티티 타입
-  entityId: string             // 엔티티 ID
-  action: AuditAction          // 액션
-  changes?: Record<string, any> // 변경 내용 (선택적)
-  metadata?: Record<string, any> // 메타데이터 (선택적)
+  id: string
+  timestamp: string          // ISO 8601
+  userId: string
+  action: AuditAction
+  entity: AuditEntity
+  entityId: string
+  before: unknown | null      // 변경 전 값
+  after: unknown | null       // 변경 후 값
+  reason?: string            // 선택적 변경 사유
+  ipAddress?: string         // 추가 보안 정보
 }
 
-/** 감사 로그 필터 */
+/**
+ * 감사 로그 필터
+ */
 export interface AuditLogFilter {
-  startDate?: string           // YYYY-MM-DD
-  endDate?: string             // YYYY-MM-DD
   userId?: string
   entity?: AuditEntity
   action?: AuditAction
+  startDate?: string         // YYYY-MM-DD
+  endDate?: string           // YYYY-MM-DD
+  limit?: number
 }
 
-/** 감사 로그 통계 */
-export interface AuditLogStats {
-  totalCount: number
-  actionBreakdown: Record<AuditAction, number>
-  entityBreakdown: Record<AuditEntity, number>
-  recentLogs: AuditLog[]
+/**
+ * 감사 로그 통계
+ */
+export interface AuditStats {
+  totalActions: number
+  byAction: Record<AuditAction, number>
+  byEntity: Record<AuditEntity, number>
+  recentActivity: AuditLog[]
 }
