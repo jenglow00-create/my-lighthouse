@@ -2,12 +2,9 @@ import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 import type { Reflection, ReflectionFilter } from '@/types/reflection'
-import {
-  createReflection as dbCreateReflection,
-  updateReflection as dbUpdateReflection,
-  deleteReflection as dbDeleteReflection,
-  getReflectionsByDateRange
-} from '@/db/operations'
+import { createReflection as dbCreateReflection } from '@/db/operations'
+import { db } from '@/db/schema'
+import { logAudit } from '@/db/audit'
 
 interface ReflectionState {
   reflections: Reflection[]
@@ -57,10 +54,13 @@ export const useReflectionStore = create<ReflectionState>()(
           let reflections: Reflection[]
 
           if (filter?.startDate && filter?.endDate) {
-            reflections = await getReflectionsByDateRange(filter.startDate, filter.endDate)
+            reflections = await db.reflections
+              .where('date')
+              .between(filter.startDate, filter.endDate, true, true)
+              .toArray()
           } else {
             // 모든 성찰 로드 (최근 순)
-            reflections = await getReflectionsByDateRange('2000-01-01', '2099-12-31')
+            reflections = await db.reflections.toArray()
           }
 
           // 추가 필터링
@@ -125,7 +125,18 @@ export const useReflectionStore = create<ReflectionState>()(
         set({ isLoading: true, error: null })
 
         try {
-          await dbUpdateReflection(id, updates)
+          const before = await db.reflections.get(id)
+          await db.reflections.update(id, updates)
+
+          // 감사 로그
+          await logAudit({
+            entity: 'reflection',
+            entityId: String(id),
+            action: 'update',
+            userId: '',
+            before,
+            after: updates
+          })
 
           // 낙관적 업데이트
           set((state) => {
@@ -152,7 +163,17 @@ export const useReflectionStore = create<ReflectionState>()(
         set({ isLoading: true, error: null })
 
         try {
-          await dbDeleteReflection(id)
+          const before = await db.reflections.get(id)
+          await db.reflections.delete(id)
+
+          // 감사 로그
+          await logAudit({
+            entity: 'reflection',
+            entityId: String(id),
+            action: 'delete',
+            userId: '',
+            before
+          })
 
           // 낙관적 업데이트
           set((state) => {
