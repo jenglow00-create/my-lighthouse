@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import Navigation from './components/Navigation'
 import AuthModal from './components/AuthModal'
+import ToastContainer from './components/ToastContainer'
 import OceanView from './pages/OceanView'
 import Goals from './pages/Goals'
 import StudyLog from './pages/StudyLog'
@@ -9,10 +10,12 @@ import Metacognition from './pages/Metacognition'
 import MetacognitionHistory from './pages/MetacognitionHistory'
 import Dashboard from './pages/Dashboard'
 import Settings from './pages/Settings'
+import AuditLog from './pages/AuditLog'
 import { collectDataPeriodically } from './utils/successRateDataCollector'
 import { migrateFromLocalStorage } from './db/migration'
 import { db } from './db/schema'
 import type { UserData, AuthUser } from '@/types'
+import { initializeStores } from './store'
 import logo from './assets/images/logos/등대 로고.png'
 import './App.css'
 
@@ -92,6 +95,10 @@ function App() {
         } else {
           console.log('ℹ️ 마이그레이션할 데이터 없음 (새로운 사용자)')
         }
+
+        // 4. Zustand 스토어 초기화
+        await initializeStores()
+        console.log('✅ Zustand 스토어 초기화 완료')
 
         // 4. IndexedDB에서 데이터 로드 (마이그레이션 후 또는 기존 사용자)
         const sessions = await db.sessions.toArray()
@@ -221,6 +228,7 @@ function App() {
               <Route path="/metacognition/history" element={<MetacognitionHistory studyData={studyData} />} />
               <Route path="/dashboard" element={<Dashboard studyData={studyData} />} />
               <Route path="/settings" element={<Settings studyData={studyData} setStudyData={setStudyData} />} />
+              <Route path="/audit" element={<AuditLog />} />
             </Routes>
           ) : (
             <div className="auth-required">
@@ -240,6 +248,7 @@ function App() {
           onClose={() => currentUser && setShowAuthModal(false)}
           onAuth={handleAuth}
         />
+        <ToastContainer />
       </div>
     </Router>
   )

@@ -1,5 +1,6 @@
 // IndexedDB CRUD 작업 함수들
 import { db } from './schema'
+import { logAudit } from './audit'
 import type { StudySession, Reflection, Subject, AuditLog, Rating, DailyStats, WeeklyStats } from '@/types'
 
 // ============================================================================
@@ -27,11 +28,12 @@ export async function createSession(
     console.log('✅ Session 생성:', newSession.id)
 
     // 감사 로그 추가
-    await createAuditLog({
+    await logAudit({
       entity: 'session',
       entityId: String(newSession.id),
       action: 'create',
-      metadata: { subjectId: session.subjectId, duration: session.duration }
+      userId: '', // TODO: 현재 사용자 ID
+      after: newSession
     })
 
     return String(newSession.id)
@@ -105,14 +107,17 @@ export async function updateSession(
   updates: Partial<StudySession>
 ): Promise<boolean> {
   try {
+    const before = await db.sessions.get(id)
     await db.sessions.update(id, updates)
     console.log('✅ Session 업데이트:', id)
 
-    await createAuditLog({
+    await logAudit({
       entity: 'session',
       entityId: String(id),
       action: 'update',
-      metadata: updates
+      userId: '', // TODO: 현재 사용자 ID
+      before,
+      after: updates
     })
 
     return true
@@ -130,13 +135,16 @@ export async function updateSession(
  */
 export async function deleteSession(id: number): Promise<boolean> {
   try {
+    const before = await db.sessions.get(id)
     await db.sessions.delete(id)
     console.log('✅ Session 삭제:', id)
 
-    await createAuditLog({
+    await logAudit({
       entity: 'session',
       entityId: String(id),
-      action: 'delete'
+      action: 'delete',
+      userId: '', // TODO: 현재 사용자 ID
+      before
     })
 
     return true
@@ -300,11 +308,12 @@ export async function createSubject(subject: Subject): Promise<string> {
     await db.subjects.add(subject)
     console.log('✅ Subject 생성:', subject.id)
 
-    await createAuditLog({
+    await logAudit({
       entity: 'subject',
       entityId: subject.id,
       action: 'create',
-      metadata: { name: subject.name, examType: subject.examType }
+      userId: '', // TODO: 현재 사용자 ID
+      after: subject
     })
 
     return subject.id
@@ -352,17 +361,20 @@ export async function getSubjectById(id: string): Promise<Subject | undefined> {
  */
 export async function updateSubject(id: string, updates: Partial<Subject>): Promise<boolean> {
   try {
+    const before = await db.subjects.get(id)
     await db.subjects.update(id, {
       ...updates,
       updatedAt: new Date().toISOString()
     })
     console.log('✅ Subject 업데이트:', id)
 
-    await createAuditLog({
+    await logAudit({
       entity: 'subject',
       entityId: id,
       action: 'update',
-      metadata: updates
+      userId: '', // TODO: 현재 사용자 ID
+      before,
+      after: updates
     })
 
     return true
@@ -380,13 +392,16 @@ export async function updateSubject(id: string, updates: Partial<Subject>): Prom
  */
 export async function deleteSubject(id: string): Promise<boolean> {
   try {
+    const before = await db.subjects.get(id)
     await db.subjects.delete(id)
     console.log('✅ Subject 삭제:', id)
 
-    await createAuditLog({
+    await logAudit({
       entity: 'subject',
       entityId: id,
-      action: 'delete'
+      action: 'delete',
+      userId: '', // TODO: 현재 사용자 ID
+      before
     })
 
     return true

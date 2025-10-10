@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Clock, BookOpen, Calendar, Brain, TrendingUp, Users } from 'lucide-react'
 import { generateInstantFeedback, generateRealTimeFeedback, type AIFeedback } from '@/utils/aiAnalysis'
-import type { StudySession, UserData, Rating } from '@/types'
+import type { Rating } from '@/types'
+import { useSessionStore, useSubjectStore, useUIStore } from '@/store'
 
 interface StudyLogProps {
-  studyData: UserData
-  setStudyData: React.Dispatch<React.SetStateAction<UserData>>
+  // Props가 더 이상 필요 없지만, 이전 호환성을 위해 optional로 유지
+  studyData?: any
+  setStudyData?: any
 }
 
 interface SessionFormData {
@@ -26,8 +28,15 @@ interface StudyTypeInfo {
   description: string
 }
 
-function StudyLog({ studyData, setStudyData }: StudyLogProps) {
+function StudyLog({ studyData: _studyData, setStudyData: _setStudyData }: StudyLogProps) {
   const navigate = useNavigate()
+
+  // Zustand Stores
+  const { sessions, addSession, getSessionsBySubject } = useSessionStore()
+  const { subjects, getSubjectsList } = useSubjectStore()
+  const { showToast } = useUIStore()
+
+  // Local UI State
   const [isLogging, setIsLogging] = useState(false)
   const [showReflectionPrompt, setShowReflectionPrompt] = useState(false)
   const [lastSessionTopic, setLastSessionTopic] = useState('')
@@ -61,11 +70,11 @@ function StudyLog({ studyData, setStudyData }: StudyLogProps) {
   // AI 피드백 생성
   useEffect(() => {
     if (sessionData.duration && sessionData.concentration && sessionData.understanding) {
-      const userProfile = studyData.personalInfo || {}
-      const allSessions = studyData.sessions || []
+      const userProfile = {} // TODO: userProfile은 나중에 추가
+      const allSessions = sessions
 
       // sessionData를 Partial<StudySession> 형식으로 변환
-      const sessionForFeedback: Partial<StudySession> = {
+      const sessionForFeedback: any = {
         duration: parseFloat(sessionData.duration) || 0,
         concentration: sessionData.concentration,
         understanding: sessionData.understanding,
@@ -77,7 +86,7 @@ function StudyLog({ studyData, setStudyData }: StudyLogProps) {
       setAiFeedback(feedback)
       setShowFeedback(true)
     }
-  }, [sessionData.concentration, sessionData.understanding, sessionData.fatigue, sessionData.duration, sessionData.studyType, studyData.personalInfo, studyData.sessions])
+  }, [sessionData.concentration, sessionData.understanding, sessionData.fatigue, sessionData.duration, sessionData.studyType, sessions])
 
   // 실시간 피드백 처리
   const handleRealTimeFeedback = (fieldName: string, value: number | string) => {
@@ -95,48 +104,38 @@ function StudyLog({ studyData, setStudyData }: StudyLogProps) {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!sessionData.duration || !sessionData.subjectId || !sessionData.studyType) return
 
-    const newSession: StudySession = {
-      id: Date.now(),
-      subjectId: sessionData.subjectId,
-      duration: parseFloat(sessionData.duration),
-      notes: sessionData.notes,
-      date: sessionData.date,
-      timestamp: new Date().toISOString(),
-      studyType: sessionData.studyType as any, // StudyType enum으로 변환 필요
-      concentration: sessionData.concentration,
-      understanding: sessionData.understanding,
-      fatigue: sessionData.fatigue
-    }
-
-    setStudyData(prev => {
-      const updatedSubjects = { ...prev.subjects }
-      if (updatedSubjects[sessionData.subjectId]) {
-        updatedSubjects[sessionData.subjectId] = {
-          ...updatedSubjects[sessionData.subjectId],
-          totalHours: (updatedSubjects[sessionData.subjectId].totalHours || 0) + newSession.duration
-        }
+    try {
+      const newSession = {
+        subjectId: sessionData.subjectId,
+        duration: parseFloat(sessionData.duration),
+        notes: sessionData.notes,
+        date: sessionData.date,
+        studyType: sessionData.studyType as any,
+        concentration: sessionData.concentration,
+        understanding: sessionData.understanding,
+        fatigue: sessionData.fatigue
       }
 
-      return {
-        ...prev,
-        subjects: updatedSubjects,
-        sessions: [newSession, ...(prev.sessions || [])]
+      await addSession(newSession)
+      showToast('학습 세션이 저장되었습니다!', 'success')
+
+      // 성찰 자동 트리거 체크
+      const reflectionEnabled = true // TODO: settings에서 가져오기
+      if (reflectionEnabled) {
+        setLastSessionTopic('학습 세션')
+        setShowReflectionPrompt(true)
       }
-    })
 
-    // 성찰 자동 트리거 체크
-    const reflectionEnabled = (studyData.settings?.autoReflection?.enabled) !== false
-    if (reflectionEnabled) {
-      setLastSessionTopic('학습 세션')
-      setShowReflectionPrompt(true)
-    }
-
-    if (!reflectionEnabled) {
-      resetSessionData()
+      if (!reflectionEnabled) {
+        resetSessionData()
+      }
+    } catch (error) {
+      console.error('세션 저장 실패:', error)
+      showToast('학습 세션 저장에 실패했습니다.', 'error')
     }
   }
 
@@ -171,9 +170,8 @@ function StudyLog({ studyData, setStudyData }: StudyLogProps) {
     resetSessionData()
   }
 
-  const recentSessions = (studyData.sessions || []).slice(0, 10)
-  const subjects = studyData.subjects || {}
-  const subjectsList = Object.entries(subjects)
+  const recentSessions = sessions.slice(0, 10)
+  const subjectsList = getSubjectsList()
 
   return (
     <main className="study-log" aria-labelledby="study-log-title">
@@ -231,8 +229,8 @@ function StudyLog({ studyData, setStudyData }: StudyLogProps) {
                 required
               >
                 <option value="">과목을 선택하세요</option>
-                {subjectsList.map(([subjectId, subject]) => (
-                  <option key={subjectId} value={subjectId}>
+                {subjectsList.map((subject) => (
+                  <option key={subject.id} value={subject.id}>
                     {subject.name} ({subject.examType})
                   </option>
                 ))}

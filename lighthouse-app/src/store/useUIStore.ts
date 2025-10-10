@@ -29,6 +29,7 @@ interface UIState {
 
   addToast: (message: string, type: 'success' | 'error' | 'info') => void
   removeToast: (id: string) => void
+  showToast: (message: string, type: 'success' | 'error' | 'info') => void
 
   setGlobalLoading: (loading: boolean) => void
   toggleTheme: () => void
@@ -69,6 +70,23 @@ export const useUIStore = create<UIState>()(
         set((state) => ({
           toasts: state.toasts.filter(t => t.id !== id)
         }))
+      },
+
+      // showToast는 addToast의 alias
+      showToast: (message, type) => {
+        const id = crypto.randomUUID()
+        set((state) => ({
+          toasts: [
+            ...state.toasts,
+            { id, message, type }
+          ]
+        }))
+
+        setTimeout(() => {
+          set((state) => ({
+            toasts: state.toasts.filter(t => t.id !== id)
+          }))
+        }, 3000)
       },
 
       setGlobalLoading: (loading) => set({ globalLoading: loading }),

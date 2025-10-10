@@ -14,6 +14,29 @@ vi.mock('react-router-dom', async () => {
   }
 })
 
+// Zustand 스토어 mock
+const mockStoreData = {
+  sessions: [] as any[],
+  subjects: {} as any,
+  addSession: vi.fn(),
+  showToast: vi.fn()
+}
+
+vi.mock('@/store', () => ({
+  useSessionStore: () => ({
+    sessions: mockStoreData.sessions,
+    addSession: mockStoreData.addSession,
+    getSessionsBySubject: vi.fn()
+  }),
+  useSubjectStore: () => ({
+    subjects: mockStoreData.subjects,
+    getSubjectsList: () => Object.values(mockStoreData.subjects)
+  }),
+  useUIStore: () => ({
+    showToast: mockStoreData.showToast
+  })
+}))
+
 describe('StudyLog', () => {
   const mockSetStudyData = vi.fn()
 
@@ -50,9 +73,23 @@ describe('StudyLog', () => {
   beforeEach(() => {
     mockSetStudyData.mockClear()
     mockNavigate.mockClear()
+    mockStoreData.addSession.mockClear()
+    mockStoreData.showToast.mockClear()
+
+    // Reset mock data
+    mockStoreData.sessions = []
+    mockStoreData.subjects = {}
   })
 
   const renderStudyLog = (studyData = defaultStudyData) => {
+    // Set up mock data from studyData
+    if (studyData.subjects) {
+      mockStoreData.subjects = studyData.subjects
+    }
+    if (studyData.sessions) {
+      mockStoreData.sessions = studyData.sessions
+    }
+
     return render(
       <BrowserRouter>
         <StudyLog studyData={studyData} setStudyData={mockSetStudyData} />
