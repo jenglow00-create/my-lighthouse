@@ -5,6 +5,18 @@ import type { Notification } from '@/types/notification'
 import type { LogEntry } from '@/utils/logger'
 import type { PerformanceMetric } from '@/utils/performanceMonitor'
 
+export interface QueuedRequest {
+  id: string;
+  url: string;
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  body?: any;
+  headers?: Record<string, string>;
+  timestamp: string;
+  retryCount: number;
+  status: 'pending' | 'syncing' | 'synced' | 'failed';
+  error?: string;
+}
+
 /**
  * Lighthouse 데이터베이스 스키마
  *
@@ -13,6 +25,7 @@ import type { PerformanceMetric } from '@/utils/performanceMonitor'
  * - version 2: 알림 시스템 추가 (notifications)
  * - version 3: 로그 시스템 추가 (logs)
  * - version 4: 성능 메트릭 추가 (performanceMetrics)
+ * - version 5: 오프라인 큐 추가 (offlineQueue)
  *
  * 인덱스 전략:
  * - 자주 조회하는 필드에만 인덱스 추가
@@ -27,6 +40,7 @@ export class LighthouseDB extends Dexie {
   notifications!: EntityTable<Notification, 'id'>
   logs!: Table<LogEntry, string>
   performanceMetrics!: Table<PerformanceMetric, string>
+  offlineQueue!: Table<QueuedRequest, string>
 
   constructor() {
     super('LighthouseDB')
@@ -98,6 +112,23 @@ export class LighthouseDB extends Dexie {
       notifications: 'id, type, enabled, lastTriggered, createdAt',
       logs: 'id, timestamp, level, userId, page',
       performanceMetrics: 'id, timestamp, name, rating, page'
+    })
+
+    /**
+     * Version 5: 오프라인 큐 추가
+     *
+     * 인덱스 설명:
+     * - offlineQueue: status (상태별 필터링), timestamp (시간순 조회)
+     */
+    this.version(5).stores({
+      sessions: 'id, date, subjectId, [date+subjectId], timestamp',
+      reflections: 'id, date, learningRating, selectedTopic',
+      subjects: 'id, name, examType',
+      auditLogs: 'id, timestamp, userId, entity, action',
+      notifications: 'id, type, enabled, lastTriggered, createdAt',
+      logs: 'id, timestamp, level, userId, page',
+      performanceMetrics: 'id, timestamp, name, rating, page',
+      offlineQueue: 'id, status, timestamp'
     })
   }
 }
