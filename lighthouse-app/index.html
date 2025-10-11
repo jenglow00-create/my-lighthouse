@@ -5,6 +5,34 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+    <!-- 보안 헤더 -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' 'unsafe-eval';
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        img-src 'self' data: https:;
+        font-src 'self' data: https://fonts.gstatic.com;
+        connect-src 'self';
+        frame-ancestors 'none';
+        base-uri 'self';
+        form-action 'self';
+      "
+    />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta
+      http-equiv="Permissions-Policy"
+      content="
+        geolocation=(),
+        microphone=(),
+        camera=(),
+        payment=()
+      "
+    />
+
     <!-- PWA 메타 태그 -->
     <meta name="theme-color" content="#4f46e5" />
     <meta name="description" content="시험 준비를 위한 올인원 학습 관리 플랫폼" />

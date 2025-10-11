@@ -1,0 +1,82 @@
+<testsuites id="" name="" tests="17" failures="0" skipped="17" errors="0" time="0.24232500000000004">
+<testsuite name="accessibility.spec.ts" timestamp="2025-10-11T00:48:48.627Z" hostname="chromium" tests="3" failures="0" skipped="3" time="0" errors="0">
+<testcase name="Accessibility › should not have accessibility violations on Dashboard" classname="accessibility.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Accessibility › should support keyboard navigation" classname="accessibility.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Accessibility › should have alt text on images" classname="accessibility.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="auth.spec.ts" timestamp="2025-10-11T00:48:48.627Z" hostname="chromium" tests="2" failures="0" skipped="2" time="0" errors="0">
+<testcase name="Authentication › should login successfully with test account" classname="auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication › should persist session after page reload" classname="auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="goals.spec.ts" timestamp="2025-10-11T00:48:48.627Z" hostname="chromium" tests="3" failures="0" skipped="3" time="0" errors="0">
+<testcase name="Goals Management › should add new subject" classname="goals.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Goals Management › should display subject list" classname="goals.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Goals Management › should persist goals after reload" classname="goals.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="metacognition.spec.ts" timestamp="2025-10-11T00:48:48.627Z" hostname="chromium" tests="3" failures="0" skipped="3" time="0" errors="0">
+<testcase name="Metacognition Flow › should navigate to metacognition page" classname="metacognition.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Metacognition Flow › should navigate to metacognition history" classname="metacognition.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Metacognition Flow › should persist reflection data after reload" classname="metacognition.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="performance.spec.ts" timestamp="2025-10-11T00:48:48.627Z" hostname="chromium" tests="3" failures="0" skipped="3" time="0" errors="0">
+<testcase name="Performance › should load pages quickly" classname="performance.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Performance › should have small bundle size" classname="performance.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Performance › should measure Web Vitals" classname="performance.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="study-flow.spec.ts" timestamp="2025-10-11T00:48:48.627Z" hostname="chromium" tests="3" failures="0" skipped="3" time="0" errors="0">
+<testcase name="Study Flow › should add new study session" classname="study-flow.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Study Flow › should persist data after page reload" classname="study-flow.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Study Flow › should navigate between pages" classname="study-flow.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+</testsuites>
