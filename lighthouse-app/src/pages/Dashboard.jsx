@@ -1,5 +1,5 @@
 import { BarChart3, Clock, Target, TrendingUp, Calendar, BookOpen, ChevronDown, Filter, ChevronUp } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { analyzeWeeklyPattern } from '@/utils/aiAnalysis'
 
 function Dashboard({ studyData }) {
@@ -12,21 +12,27 @@ function Dashboard({ studyData }) {
   const subjects = studyData.subjects || {}
   const subjectsList = Object.entries(subjects)
 
-  // 필터링된 세션
-  const filteredSessions = selectedSubjectId === 'all'
-    ? sessions
-    : sessions.filter(session => session.subjectId === selectedSubjectId)
+  // 필터링된 세션 (useMemo로 최적화)
+  const filteredSessions = useMemo(() =>
+    selectedSubjectId === 'all'
+      ? sessions
+      : sessions.filter(session => session.subjectId === selectedSubjectId),
+    [selectedSubjectId, sessions]
+  )
 
-  // 현재 선택된 과목
-  const currentSubject = selectedSubjectId !== 'all' ? subjects[selectedSubjectId] : null
+  // 현재 선택된 과목 (useMemo로 최적화)
+  const currentSubject = useMemo(() =>
+    selectedSubjectId !== 'all' ? subjects[selectedSubjectId] : null,
+    [selectedSubjectId, subjects]
+  )
 
-  const calculateTotalHours = (sessions) => {
+  const calculateTotalHours = useCallback((sessions) => {
     return sessions.reduce((total, session) => total + session.duration, 0)
-  }
+  }, [])
 
-  const totalHours = calculateTotalHours(filteredSessions)
+  const totalHours = useMemo(() => calculateTotalHours(filteredSessions), [filteredSessions, calculateTotalHours])
 
-  const stats = {
+  const stats = useMemo(() => ({
     totalHours,
     totalSessions: filteredSessions.length,
     averageSession: filteredSessions.length > 0 ? (totalHours / filteredSessions.length).toFixed(1) : 0,
@@ -34,10 +40,10 @@ function Dashboard({ studyData }) {
     thisWeek: calculateWeeklyHours(filteredSessions),
     thisMonth: calculateMonthlyHours(filteredSessions),
     progress: currentSubject ? Math.min((currentSubject.totalHours / currentSubject.targetHours) * 100, 100) : 0
-  }
+  }), [totalHours, filteredSessions, currentSubject])
 
-  const recentActivity = filteredSessions.slice(0, 10)
-  const topicStats = calculateTopicStats(filteredSessions)
+  const recentActivity = useMemo(() => filteredSessions.slice(0, 10), [filteredSessions])
+  const topicStats = useMemo(() => calculateTopicStats(filteredSessions), [filteredSessions])
 
   function calculateStreak(sessions) {
     if (sessions.length === 0) return 0

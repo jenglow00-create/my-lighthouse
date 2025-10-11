@@ -1,11 +1,15 @@
-import { useState } from 'react'
-import { Settings as SettingsIcon, Target, BookOpen, Trash2, Download, Upload, Users, Brain, ToggleLeft, ToggleRight, User, Clock, Database, Palette } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Settings as SettingsIcon, Target, BookOpen, Trash2, Download, Upload, Users, Brain, ToggleLeft, ToggleRight, User, Clock, Database, Palette, Activity } from 'lucide-react'
 import SubjectManager from '../components/SubjectManager'
 import { successRateDataCollector } from '../utils/successRateDataCollector'
 import { boatOptions } from '../constants/boatOptions'
+import { getPerformanceStats, getOptimizationSuggestions } from '../utils/performanceMonitor'
 
 function Settings({ studyData, setStudyData }) {
   const [activeTab, setActiveTab] = useState('subjects')
+  const [performanceStats, setPerformanceStats] = useState(null)
+  const [suggestions, setSuggestions] = useState([])
+  const [loadingPerf, setLoadingPerf] = useState(false)
 
   const examTypes = [
     { id: 'TOEIC', name: 'TOEIC', description: '영어 능력 시험' },
@@ -85,6 +89,40 @@ function Settings({ studyData, setStudyData }) {
     }
   }
 
+  // 성능 탭 열릴 때 통계 로드
+  useEffect(() => {
+    if (activeTab === 'performance') {
+      loadPerformanceStats()
+    }
+  }, [activeTab])
+
+  async function loadPerformanceStats() {
+    setLoadingPerf(true)
+    try {
+      const [lcpStats, clsStats, fcpStats, ttfbStats, inpStats] = await Promise.all([
+        getPerformanceStats('LCP'),
+        getPerformanceStats('CLS'),
+        getPerformanceStats('FCP'),
+        getPerformanceStats('TTFB'),
+        getPerformanceStats('INP')
+      ])
+
+      setPerformanceStats({
+        LCP: lcpStats,
+        CLS: clsStats,
+        FCP: fcpStats,
+        TTFB: ttfbStats,
+        INP: inpStats
+      })
+
+      const opts = await getOptimizationSuggestions()
+      setSuggestions(opts)
+    } catch (error) {
+      console.error('Failed to load performance stats:', error)
+    }
+    setLoadingPerf(false)
+  }
+
   return (
     <div className="settings">
       <div className="page-header">
@@ -137,6 +175,13 @@ function Settings({ studyData, setStudyData }) {
         >
           <BookOpen size={16} />
           데이터 관리
+        </button>
+        <button
+          className={`tab ${activeTab === 'performance' ? 'active' : ''}`}
+          onClick={() => setActiveTab('performance')}
+        >
+          <Activity size={16} />
+          성능 통계
         </button>
       </div>
 
@@ -634,9 +679,196 @@ function Settings({ studyData, setStudyData }) {
             </div>
           </div>
         )}
+
+        {activeTab === 'performance' && (
+          <div className="performance-settings">
+            <div className="setting-section">
+              <h3>
+                <Activity size={20} />
+                Web Vitals 성능 통계
+              </h3>
+              <p>앱의 성능 메트릭을 확인하고 최적화 제안을 받아보세요</p>
+
+              {loadingPerf ? (
+                <div className="performance-loading">로딩 중...</div>
+              ) : performanceStats ? (
+                <>
+                  <div className="performance-metrics">
+                    {/* LCP */}
+                    <div className="metric-card">
+                      <h4>LCP (Largest Contentful Paint)</h4>
+                      <p className="metric-description">페이지의 주요 콘텐츠가 렌더링되는 시간</p>
+                      {performanceStats.LCP.count > 0 ? (
+                        <>
+                          <div className="metric-value">
+                            {performanceStats.LCP.avg.toFixed(0)}ms
+                            <span className={`metric-rating ${getRatingClass(performanceStats.LCP.avg, 2500, 4000)}`}>
+                              {getRatingText(performanceStats.LCP.avg, 2500, 4000)}
+                            </span>
+                          </div>
+                          <div className="metric-stats">
+                            <div className="stat">
+                              <span>최소:</span> <span>{performanceStats.LCP.min.toFixed(0)}ms</span>
+                            </div>
+                            <div className="stat">
+                              <span>최대:</span> <span>{performanceStats.LCP.max.toFixed(0)}ms</span>
+                            </div>
+                            <div className="stat">
+                              <span>P95:</span> <span>{performanceStats.LCP.p95.toFixed(0)}ms</span>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="metric-no-data">데이터 없음</div>
+                      )}
+                    </div>
+
+                    {/* CLS */}
+                    <div className="metric-card">
+                      <h4>CLS (Cumulative Layout Shift)</h4>
+                      <p className="metric-description">페이지 레이아웃의 안정성</p>
+                      {performanceStats.CLS.count > 0 ? (
+                        <>
+                          <div className="metric-value">
+                            {performanceStats.CLS.avg.toFixed(3)}
+                            <span className={`metric-rating ${getRatingClass(performanceStats.CLS.avg, 0.1, 0.25)}`}>
+                              {getRatingText(performanceStats.CLS.avg, 0.1, 0.25)}
+                            </span>
+                          </div>
+                          <div className="metric-stats">
+                            <div className="stat">
+                              <span>최소:</span> <span>{performanceStats.CLS.min.toFixed(3)}</span>
+                            </div>
+                            <div className="stat">
+                              <span>최대:</span> <span>{performanceStats.CLS.max.toFixed(3)}</span>
+                            </div>
+                            <div className="stat">
+                              <span>P95:</span> <span>{performanceStats.CLS.p95.toFixed(3)}</span>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="metric-no-data">데이터 없음</div>
+                      )}
+                    </div>
+
+                    {/* FCP */}
+                    <div className="metric-card">
+                      <h4>FCP (First Contentful Paint)</h4>
+                      <p className="metric-description">첫 콘텐츠가 렌더링되는 시간</p>
+                      {performanceStats.FCP.count > 0 ? (
+                        <>
+                          <div className="metric-value">
+                            {performanceStats.FCP.avg.toFixed(0)}ms
+                            <span className={`metric-rating ${getRatingClass(performanceStats.FCP.avg, 1800, 3000)}`}>
+                              {getRatingText(performanceStats.FCP.avg, 1800, 3000)}
+                            </span>
+                          </div>
+                          <div className="metric-stats">
+                            <div className="stat">
+                              <span>평균:</span> <span>{performanceStats.FCP.avg.toFixed(0)}ms</span>
+                            </div>
+                            <div className="stat">
+                              <span>P95:</span> <span>{performanceStats.FCP.p95.toFixed(0)}ms</span>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="metric-no-data">데이터 없음</div>
+                      )}
+                    </div>
+
+                    {/* TTFB */}
+                    <div className="metric-card">
+                      <h4>TTFB (Time to First Byte)</h4>
+                      <p className="metric-description">첫 바이트가 도착하는 시간</p>
+                      {performanceStats.TTFB.count > 0 ? (
+                        <>
+                          <div className="metric-value">
+                            {performanceStats.TTFB.avg.toFixed(0)}ms
+                            <span className={`metric-rating ${getRatingClass(performanceStats.TTFB.avg, 800, 1800)}`}>
+                              {getRatingText(performanceStats.TTFB.avg, 800, 1800)}
+                            </span>
+                          </div>
+                          <div className="metric-stats">
+                            <div className="stat">
+                              <span>평균:</span> <span>{performanceStats.TTFB.avg.toFixed(0)}ms</span>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="metric-no-data">데이터 없음</div>
+                      )}
+                    </div>
+
+                    {/* INP */}
+                    <div className="metric-card">
+                      <h4>INP (Interaction to Next Paint)</h4>
+                      <p className="metric-description">사용자 인터랙션 응답 시간</p>
+                      {performanceStats.INP.count > 0 ? (
+                        <>
+                          <div className="metric-value">
+                            {performanceStats.INP.avg.toFixed(0)}ms
+                            <span className={`metric-rating ${getRatingClass(performanceStats.INP.avg, 200, 500)}`}>
+                              {getRatingText(performanceStats.INP.avg, 200, 500)}
+                            </span>
+                          </div>
+                          <div className="metric-stats">
+                            <div className="stat">
+                              <span>평균:</span> <span>{performanceStats.INP.avg.toFixed(0)}ms</span>
+                            </div>
+                            <div className="stat">
+                              <span>P95:</span> <span>{performanceStats.INP.p95.toFixed(0)}ms</span>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="metric-no-data">데이터 없음</div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="optimization-suggestions">
+                    <h4>최적화 제안</h4>
+                    {suggestions.length > 0 ? (
+                      <ul>
+                        {suggestions.map((suggestion, i) => (
+                          <li key={i}>{suggestion}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>제안이 없습니다.</p>
+                    )}
+                  </div>
+
+                  <button onClick={loadPerformanceStats} className="btn-primary">
+                    통계 새로고침
+                  </button>
+                </>
+              ) : (
+                <div className="performance-empty">
+                  <p>성능 데이터가 없습니다.</p>
+                  <p>앱을 사용하면 자동으로 성능 메트릭이 수집됩니다.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
+
+  function getRatingClass(value, goodThreshold, poorThreshold) {
+    if (value <= goodThreshold) return 'good'
+    if (value <= poorThreshold) return 'needs-improvement'
+    return 'poor'
+  }
+
+  function getRatingText(value, goodThreshold, poorThreshold) {
+    if (value <= goodThreshold) return '좋음'
+    if (value <= poorThreshold) return '개선 필요'
+    return '나쁨'
+  }
 }
 
 export default Settings

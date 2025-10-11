@@ -1,0 +1,416 @@
+.notification-settings {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.notification-settings__header {
+  margin-bottom: 2rem;
+}
+
+.notification-settings__header h1 {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.notification-settings__header p {
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+/* 권한 요청 */
+.notification-permission-request {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 3rem 2rem;
+  border-radius: 16px;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.notification-permission-request svg {
+  margin-bottom: 1rem;
+}
+
+.notification-permission-request h3 {
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.notification-permission-request p {
+  opacity: 0.9;
+  margin-bottom: 1.5rem;
+}
+
+.notification-permission-request .btn-primary {
+  background: white;
+  color: #667eea;
+  padding: 0.875rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* 권한 차단 */
+.notification-permission-blocked {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #6b7280;
+}
+
+.notification-permission-blocked svg {
+  color: #ef4444;
+  margin-bottom: 1.5rem;
+}
+
+.notification-permission-blocked h2 {
+  color: #111827;
+  margin-bottom: 1rem;
+}
+
+.permission-steps {
+  margin-top: 2rem;
+  text-align: left;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+  background: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 12px;
+}
+
+.permission-steps h3 {
+  color: #111827;
+  margin-bottom: 1rem;
+}
+
+.permission-steps ol {
+  color: #4b5563;
+  line-height: 1.8;
+  padding-left: 1.5rem;
+}
+
+/* 액션 버튼 */
+.notification-actions {
+  margin-bottom: 2rem;
+}
+
+.notification-actions .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* 프리셋 그리드 */
+.notification-presets {
+  background: #f9fafb;
+  padding: 2rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+}
+
+.notification-presets h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: #111827;
+}
+
+.presets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.preset-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+}
+
+.preset-card:hover {
+  border-color: #4f46e5;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+}
+
+.preset-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.preset-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.preset-card p {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
+}
+
+.preset-schedule {
+  font-size: 0.75rem;
+  color: #4f46e5;
+  font-weight: 600;
+}
+
+/* 알림 목록 */
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.loading,
+.empty-state {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #6b7280;
+}
+
+.empty-state svg {
+  color: #d1d5db;
+  margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+/* 알림 카드 */
+.notification-card {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.2s;
+}
+
+.notification-card.enabled {
+  border-color: #4f46e5;
+  background: #fafaff;
+}
+
+.notification-card.disabled {
+  opacity: 0.6;
+}
+
+.notification-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.notification-type {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: #4f46e5;
+  color: white;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* 토글 스위치 */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 28px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #cbd5e1;
+  transition: 0.3s;
+  border-radius: 28px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: #4f46e5;
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(24px);
+}
+
+/* 알림 내용 */
+.notification-card__content h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.notification-card__content p {
+  color: #4b5563;
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
+}
+
+.notification-schedule {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 1rem;
+}
+
+.last-triggered {
+  color: #9ca3af;
+}
+
+.notification-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-icon {
+  padding: 0.5rem;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  color: #4b5563;
+}
+
+.btn-icon:hover {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.btn-icon.btn-danger {
+  color: #ef4444;
+}
+
+.btn-icon.btn-danger:hover {
+  background: #fee2e2;
+}
+
+/* 편집 모드 */
+.notification-card__edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.input-title,
+.input-body,
+.input-time {
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-family: inherit;
+}
+
+.input-title:focus,
+.input-body:focus,
+.input-time:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.input-body {
+  resize: vertical;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-save,
+.btn-cancel {
+  flex: 1;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.btn-save {
+  background: #4f46e5;
+  color: white;
+}
+
+.btn-save:hover {
+  background: #4338ca;
+}
+
+.btn-cancel {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.btn-cancel:hover {
+  background: #e5e7eb;
+}
+
+/* 모바일 */
+@media (max-width: 640px) {
+  .notification-settings {
+    padding: 1rem;
+  }
+
+  .notification-settings__header h1 {
+    font-size: 1.5rem;
+  }
+
+  .presets-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .notification-card {
+    padding: 1rem;
+  }
+}

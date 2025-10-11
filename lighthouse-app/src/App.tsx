@@ -1,16 +1,25 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import Navigation from './components/Navigation'
 import AuthModal from './components/AuthModal'
 import ToastContainer from './components/ToastContainer'
-import OceanView from './pages/OceanView'
-import Goals from './pages/Goals'
-import StudyLog from './pages/StudyLog'
-import Metacognition from './pages/Metacognition'
-import MetacognitionHistory from './pages/MetacognitionHistory'
-import Dashboard from './pages/Dashboard'
-import Settings from './pages/Settings'
-import AuditLog from './pages/AuditLog'
+import PWAInstallPrompt from './components/PWAInstallPrompt'
+import PWAUpdateNotification from './components/PWAUpdateNotification'
+import OfflineIndicator from './components/OfflineIndicator'
+import ErrorBoundary, { PageErrorFallback } from './components/ErrorBoundary'
+import LoadingSpinner from './components/LoadingSpinner'
+
+// 코드 스플리팅: 페이지별 lazy loading
+const OceanView = lazy(() => import('./pages/OceanView'))
+const Goals = lazy(() => import('./pages/Goals'))
+const StudyLog = lazy(() => import('./pages/StudyLog'))
+const Metacognition = lazy(() => import('./pages/Metacognition'))
+const MetacognitionHistory = lazy(() => import('./pages/MetacognitionHistory'))
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const Settings = lazy(() => import('./pages/Settings'))
+const AuditLog = lazy(() => import('./pages/AuditLog'))
+const NotificationSettings = lazy(() => import('./pages/NotificationSettings'))
+const LogViewer = lazy(() => import('./pages/LogViewer'))
 import { collectDataPeriodically } from './utils/successRateDataCollector'
 import { migrateFromLocalStorage } from './db/migration'
 import { db } from './db/schema'
@@ -212,24 +221,81 @@ function App() {
   }
 
   return (
-    <Router>
-      <div className="app">
-        <a href="#main-content" className="skip-link">
-          메인 컨텐츠로 건너뛰기
-        </a>
-        <Navigation currentUser={currentUser} onLogout={handleLogout} onShowAuth={() => setShowAuthModal(true)} />
-        <main id="main-content" className="main-content" tabIndex={-1}>
-          {currentUser ? (
-            <Routes>
-              <Route path="/" element={<OceanView studyData={studyData} />} />
-              <Route path="/goals" element={<Goals studyData={studyData} />} />
-              <Route path="/study" element={<StudyLog studyData={studyData} setStudyData={setStudyData} />} />
-              <Route path="/metacognition" element={<Metacognition studyData={studyData} setStudyData={setStudyData} />} />
-              <Route path="/metacognition/history" element={<MetacognitionHistory studyData={studyData} />} />
-              <Route path="/dashboard" element={<Dashboard studyData={studyData} />} />
-              <Route path="/settings" element={<Settings studyData={studyData} setStudyData={setStudyData} />} />
-              <Route path="/audit" element={<AuditLog />} />
-            </Routes>
+    <ErrorBoundary>
+      <Router>
+        <div className="app">
+          <a href="#main-content" className="skip-link">
+            메인 컨텐츠로 건너뛰기
+          </a>
+          <Navigation currentUser={currentUser} onLogout={handleLogout} onShowAuth={() => setShowAuthModal(true)} />
+          <main id="main-content" className="main-content" tabIndex={-1}>
+            {currentUser ? (
+              <Suspense fallback={<LoadingSpinner />}>
+                <Routes>
+                  <Route path="/" element={
+                    <ErrorBoundary fallbackComponent={(error, reset) => (
+                      <PageErrorFallback pageName="홈" error={error} onReset={reset} />
+                    )}>
+                      <OceanView studyData={studyData} />
+                    </ErrorBoundary>
+                  } />
+                <Route path="/goals" element={
+                  <ErrorBoundary fallbackComponent={(error, reset) => (
+                    <PageErrorFallback pageName="목표" error={error} onReset={reset} />
+                  )}>
+                    <Goals studyData={studyData} />
+                  </ErrorBoundary>
+                } />
+                <Route path="/study" element={
+                  <ErrorBoundary fallbackComponent={(error, reset) => (
+                    <PageErrorFallback pageName="학습 기록" error={error} onReset={reset} />
+                  )}>
+                    <StudyLog studyData={studyData} setStudyData={setStudyData} />
+                  </ErrorBoundary>
+                } />
+                <Route path="/metacognition" element={
+                  <ErrorBoundary fallbackComponent={(error, reset) => (
+                    <PageErrorFallback pageName="성찰" error={error} onReset={reset} />
+                  )}>
+                    <Metacognition studyData={studyData} setStudyData={setStudyData} />
+                  </ErrorBoundary>
+                } />
+                <Route path="/metacognition/history" element={
+                  <ErrorBoundary fallbackComponent={(error, reset) => (
+                    <PageErrorFallback pageName="성찰 히스토리" error={error} onReset={reset} />
+                  )}>
+                    <MetacognitionHistory studyData={studyData} />
+                  </ErrorBoundary>
+                } />
+                <Route path="/dashboard" element={
+                  <ErrorBoundary fallbackComponent={(error, reset) => (
+                    <PageErrorFallback pageName="대시보드" error={error} onReset={reset} />
+                  )}>
+                    <Dashboard studyData={studyData} />
+                  </ErrorBoundary>
+                } />
+                <Route path="/settings" element={
+                  <ErrorBoundary fallbackComponent={(error, reset) => (
+                    <PageErrorFallback pageName="설정" error={error} onReset={reset} />
+                  )}>
+                    <Settings studyData={studyData} setStudyData={setStudyData} />
+                  </ErrorBoundary>
+                } />
+                <Route path="/audit" element={
+                  <ErrorBoundary><AuditLog /></ErrorBoundary>
+                } />
+                <Route path="/notifications" element={
+                  <ErrorBoundary><NotificationSettings /></ErrorBoundary>
+                } />
+                <Route path="/logs" element={
+                  <ErrorBoundary fallbackComponent={(error, reset) => (
+                    <PageErrorFallback pageName="로그 뷰어" error={error} onReset={reset} />
+                  )}>
+                    <LogViewer />
+                  </ErrorBoundary>
+                } />
+              </Routes>
+              </Suspense>
           ) : (
             <div className="auth-required">
               <div className="auth-placeholder">
@@ -249,8 +315,12 @@ function App() {
           onAuth={handleAuth}
         />
         <ToastContainer />
-      </div>
-    </Router>
+        <PWAInstallPrompt />
+        <PWAUpdateNotification />
+        <OfflineIndicator />
+        </div>
+      </Router>
+    </ErrorBoundary>
   )
 }
 
