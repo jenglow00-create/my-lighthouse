@@ -1,0 +1,278 @@
+.install-prompt-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.install-prompt {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  position: relative;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.install-prompt-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #666;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.install-prompt-close:hover {
+  background: #f3f4f6;
+  color: #333;
+}
+
+.install-prompt-icon {
+  font-size: 3rem;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.install-prompt-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  margin: 0 0 0.5rem 0;
+  color: #1f2937;
+}
+
+.install-prompt-description {
+  text-align: center;
+  color: #6b7280;
+  margin: 0 0 1.5rem 0;
+  font-size: 0.95rem;
+}
+
+.install-prompt-benefits {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.benefit {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.benefit:hover {
+  background: #f3f4f6;
+  transform: translateY(-2px);
+}
+
+.benefit-icon {
+  font-size: 1.25rem;
+}
+
+.benefit-text {
+  font-size: 0.85rem;
+  color: #374151;
+  font-weight: 500;
+}
+
+.install-prompt-instructions {
+  background: #fef3c7;
+  border: 1px solid #fbbf24;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.instructions-text {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
+  color: #92400e;
+  font-weight: 500;
+}
+
+.ios-install-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.step {
+  font-size: 0.85rem;
+  color: #78350f;
+  padding-left: 0.5rem;
+}
+
+.step strong {
+  color: #92400e;
+}
+
+.install-prompt-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.btn-install,
+.btn-later {
+  flex: 1;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-install {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-install:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-install:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.btn-later {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.btn-later:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.btn-later:active {
+  background: #d1d5db;
+}
+
+/* 모바일 최적화 */
+@media (max-width: 640px) {
+  .install-prompt {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  .install-prompt-title {
+    font-size: 1.25rem;
+  }
+
+  .install-prompt-benefits {
+    gap: 0.75rem;
+  }
+
+  .benefit {
+    padding: 0.5rem;
+  }
+
+  .benefit-text {
+    font-size: 0.8rem;
+  }
+
+  .btn-install,
+  .btn-later {
+    padding: 0.625rem 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* 다크 모드 지원 */
+@media (prefers-color-scheme: dark) {
+  .install-prompt {
+    background: #1f2937;
+    color: #f9fafb;
+  }
+
+  .install-prompt-title {
+    color: #f9fafb;
+  }
+
+  .install-prompt-description {
+    color: #9ca3af;
+  }
+
+  .benefit {
+    background: #374151;
+  }
+
+  .benefit:hover {
+    background: #4b5563;
+  }
+
+  .benefit-text {
+    color: #d1d5db;
+  }
+
+  .install-prompt-close {
+    color: #9ca3af;
+  }
+
+  .install-prompt-close:hover {
+    background: #374151;
+    color: #f9fafb;
+  }
+
+  .btn-later {
+    background: #374151;
+    color: #d1d5db;
+  }
+
+  .btn-later:hover {
+    background: #4b5563;
+    color: #f9fafb;
+  }
+}

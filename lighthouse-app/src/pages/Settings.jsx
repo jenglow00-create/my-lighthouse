@@ -1,15 +1,19 @@
 import { useState, useEffect } from 'react'
-import { Settings as SettingsIcon, Target, BookOpen, Trash2, Download, Upload, Users, Brain, ToggleLeft, ToggleRight, User, Clock, Database, Palette, Activity } from 'lucide-react'
+import { Settings as SettingsIcon, Target, BookOpen, Trash2, Download, Upload, Users, Brain, ToggleLeft, ToggleRight, User, Clock, Database, Palette, Activity, Wifi } from 'lucide-react'
 import SubjectManager from '../components/SubjectManager'
 import { successRateDataCollector } from '../utils/successRateDataCollector'
 import { boatOptions } from '../constants/boatOptions'
 import { getPerformanceStats, getOptimizationSuggestions } from '../utils/performanceMonitor'
+import { getServiceWorkerStatus } from '../utils/registerServiceWorker'
+import { offlineQueueService } from '../services/offlineQueue.service'
 
 function Settings({ studyData, setStudyData }) {
   const [activeTab, setActiveTab] = useState('subjects')
   const [performanceStats, setPerformanceStats] = useState(null)
   const [suggestions, setSuggestions] = useState([])
   const [loadingPerf, setLoadingPerf] = useState(false)
+  const [swStatus, setSwStatus] = useState(null)
+  const [queueStatus, setQueueStatus] = useState(null)
 
   const examTypes = [
     { id: 'TOEIC', name: 'TOEIC', description: '영어 능력 시험' },
@@ -95,6 +99,56 @@ function Settings({ studyData, setStudyData }) {
       loadPerformanceStats()
     }
   }, [activeTab])
+
+  // PWA 탭 열릴 때 상태 로드
+  useEffect(() => {
+    if (activeTab === 'pwa') {
+      loadPWAStatus()
+    }
+  }, [activeTab])
+
+  async function loadPWAStatus() {
+    try {
+      const sw = await getServiceWorkerStatus()
+      setSwStatus(sw)
+
+      const queue = await offlineQueueService.getQueueStatus()
+      setQueueStatus(queue)
+    } catch (error) {
+      console.error('Failed to load PWA status:', error)
+    }
+  }
+
+  const handleSyncQueue = async () => {
+    try {
+      await offlineQueueService.sync()
+      await loadPWAStatus()
+    } catch (error) {
+      console.error('Failed to sync queue:', error)
+    }
+  }
+
+  const handleRetryFailed = async () => {
+    try {
+      await offlineQueueService.retryFailed()
+      await loadPWAStatus()
+    } catch (error) {
+      console.error('Failed to retry failed:', error)
+    }
+  }
+
+  const handleClearCache = async () => {
+    if (!window.confirm('캐시를 모두 삭제하시겠습니까?')) return
+
+    try {
+      const cacheNames = await caches.keys()
+      await Promise.all(cacheNames.map(name => caches.delete(name)))
+      alert('캐시가 삭제되었습니다')
+    } catch (error) {
+      console.error('Failed to clear cache:', error)
+      alert('캐시 삭제 실패')
+    }
+  }
 
   async function loadPerformanceStats() {
     setLoadingPerf(true)
@@ -182,6 +236,13 @@ function Settings({ studyData, setStudyData }) {
         >
           <Activity size={16} />
           성능 통계
+        </button>
+        <button
+          className={`tab ${activeTab === 'pwa' ? 'active' : ''}`}
+          onClick={() => setActiveTab('pwa')}
+        >
+          <Wifi size={16} />
+          PWA & 오프라인
         </button>
       </div>
 
@@ -851,6 +912,120 @@ function Settings({ studyData, setStudyData }) {
                   <p>앱을 사용하면 자동으로 성능 메트릭이 수집됩니다.</p>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'pwa' && (
+          <div className="pwa-settings">
+            <div className="setting-section">
+              <h3>🏮 Service Worker 상태</h3>
+              {swStatus ? (
+                <div className="status-grid">
+                  <div className="status-item">
+                    <span className="status-label">등록 상태</span>
+                    <span className={`status-value ${swStatus.registered ? 'active' : 'inactive'}`}>
+                      {swStatus.registered ? '✅ 등록됨' : '❌ 미등록'}
+                    </span>
+                  </div>
+                  {swStatus.registered && (
+                    <>
+                      <div className="status-item">
+                        <span className="status-label">업데이트 가능</span>
+                        <span className={`status-value ${swStatus.updateAvailable ? 'warning' : 'success'}`}>
+                          {swStatus.updateAvailable ? '⚠️ 업데이트 있음' : '✅ 최신'}
+                        </span>
+                      </div>
+                      <div className="status-item">
+                        <span className="status-label">Scope</span>
+                        <span className="status-value code">{swStatus.scope || 'N/A'}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <p>Service Worker 상태를 불러오는 중...</p>
+              )}
+            </div>
+
+            <div className="setting-section">
+              <h3>📦 오프라인 큐 상태</h3>
+              {queueStatus ? (
+                <div className="queue-stats">
+                  <div className="queue-stat">
+                    <div className="stat-value">{queueStatus.pending}</div>
+                    <div className="stat-label">대기 중</div>
+                  </div>
+                  <div className="queue-stat">
+                    <div className="stat-value">{queueStatus.syncing}</div>
+                    <div className="stat-label">동기화 중</div>
+                  </div>
+                  <div className="queue-stat success">
+                    <div className="stat-value">{queueStatus.synced}</div>
+                    <div className="stat-label">완료</div>
+                  </div>
+                  <div className="queue-stat error">
+                    <div className="stat-value">{queueStatus.failed}</div>
+                    <div className="stat-label">실패</div>
+                  </div>
+                  <div className="queue-stat">
+                    <div className="stat-value">{queueStatus.total}</div>
+                    <div className="stat-label">전체</div>
+                  </div>
+                </div>
+              ) : (
+                <p>큐 상태를 불러오는 중...</p>
+              )}
+
+              <div className="queue-actions">
+                <button onClick={handleSyncQueue} className="btn-primary">
+                  수동 동기화
+                </button>
+                {queueStatus && queueStatus.failed > 0 && (
+                  <button onClick={handleRetryFailed} className="btn-secondary">
+                    실패 항목 재시도 ({queueStatus.failed})
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="setting-section">
+              <h3>💾 캐시 관리</h3>
+              <p>앱의 캐시 데이터를 관리합니다. 캐시를 삭제하면 오프라인 기능이 일시적으로 작동하지 않을 수 있습니다.</p>
+              <button onClick={handleClearCache} className="btn-danger">
+                <Trash2 size={16} />
+                모든 캐시 삭제
+              </button>
+            </div>
+
+            <div className="setting-section">
+              <h3>ℹ️ PWA 정보</h3>
+              <div className="info-grid">
+                <div className="info-item">
+                  <span className="info-label">설치 모드</span>
+                  <span className="info-value">
+                    {window.matchMedia('(display-mode: standalone)').matches ? '🎯 Standalone' : '🌐 브라우저'}
+                  </span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">온라인 상태</span>
+                  <span className="info-value">
+                    {navigator.onLine ? '✅ 온라인' : '📡 오프라인'}
+                  </span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">IndexedDB</span>
+                  <span className="info-value">
+                    {'indexedDB' in window ? '✅ 지원됨' : '❌ 미지원'}
+                  </span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Service Worker API</span>
+                  <span className="info-value">
+                    {'serviceWorker' in navigator ? '✅ 지원됨' : '❌ 미지원'}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         )}

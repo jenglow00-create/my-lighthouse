@@ -4132,3 +4132,165 @@ select {
     padding: 1rem;
   }
 }
+
+/* PWA Settings */
+.pwa-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.status-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.status-label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.status-value {
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.status-value.active,
+.status-value.success {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-value.inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-value.warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-value.code {
+  background: #e0e7ff;
+  color: #3730a3;
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+.queue-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.queue-stat {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 2px solid #e5e7eb;
+  transition: all 0.2s;
+}
+
+.queue-stat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.queue-stat.success {
+  border-color: #10b981;
+  background: #d1fae5;
+}
+
+.queue-stat.error {
+  border-color: #ef4444;
+  background: #fee2e2;
+}
+
+.queue-stat .stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+}
+
+.queue-stat.success .stat-value {
+  color: #065f46;
+}
+
+.queue-stat.error .stat-value {
+  color: #991b1b;
+}
+
+.queue-stat .stat-label {
+  font-size: 0.85rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.queue-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.info-value {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+@media (max-width: 768px) {
+  .status-grid,
+  .queue-stats,
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .queue-actions {
+    flex-direction: column;
+  }
+
+  .queue-actions button {
+    width: 100%;
+  }
+}

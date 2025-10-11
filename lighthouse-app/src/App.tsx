@@ -6,6 +6,8 @@ import ToastContainer from './components/ToastContainer'
 import PWAInstallPrompt from './components/PWAInstallPrompt'
 import PWAUpdateNotification from './components/PWAUpdateNotification'
 import OfflineIndicator from './components/OfflineIndicator'
+import { InstallPrompt } from './components/InstallPrompt'
+import { NetworkStatusIndicator } from './components/NetworkStatusIndicator'
 import ErrorBoundary, { PageErrorFallback } from './components/ErrorBoundary'
 import LoadingSpinner from './components/LoadingSpinner'
 
@@ -318,6 +320,8 @@ function App() {
         <PWAInstallPrompt />
         <PWAUpdateNotification />
         <OfflineIndicator />
+        <InstallPrompt />
+        <NetworkStatusIndicator />
         </div>
       </Router>
     </ErrorBoundary>
