@@ -13,7 +13,13 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
-    "test:watch": "vitest --watch"
+    "test:watch": "vitest --watch",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:chromium": "playwright test --project=chromium",
+    "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
     "dexie": "^4.2.0",
@@ -30,7 +36,9 @@
   },
   "devDependencies": {
     "@axe-core/cli": "^4.10.2",
+    "@axe-core/playwright": "^4.10.2",
     "@eslint/js": "^9.36.0",
+    "@playwright/test": "^1.56.0",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
     "@types/node": "^24.6.2",
